@@ -40,7 +40,7 @@ Solución SaaS para gestionar **empleados, nóminas, talento, contratación y de
 |---|---|---|---|
 | 1 | Miguel Espinoza | Líder técnico / DevOps | Arquitectura, `serverless.yml`, CI/CD, Amplify, IAM |
 | 2 | _(nombre)_ | Backend A | ms-usuarios (auth) + ms-empleados |
-| 3 | _(nombre)_ | Backend B | ms-nominas + ms-reclutamiento |
+| 3 | Rodrigo Miguel Gomez Pacheco | Backend B | ms-nominas + ms-reclutamiento |
 | 4 | _(nombre)_ | Backend C | ms-desempeno + ms-notificaciones (SNS/SQS) |
 | 5 | _(nombre)_ | Frontend | UI, integración con APIs, login multi-tenant |
 | 6 | _(nombre)_ | Datos / QA / Documentación | Datos ficticios (30k/servicio), pruebas, informe y PPT |
