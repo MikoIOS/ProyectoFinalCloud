@@ -1,13 +1,13 @@
 # Proyecto Final – CS2032 Cloud Computing (2026-2)
 
-**Grupo 4 · SaaS tipo PPM (Project Portfolio Management)**
+**Grupo 2 · SaaS tipo HCM (Human Capital Management)**
 Plataforma multi-tenant, serverless y basada en eventos desplegada en AWS.
 
 ---
 
 ## 1. Resumen del proyecto
 
-Solución SaaS para gestionar **proyectos, portafolios, recursos, presupuestos y prioridades**, con aislamiento por tenant.
+Solución SaaS para gestionar **empleados, nóminas, talento, contratación y desempeño**, con aislamiento por tenant.
 
 | Requisito del enunciado | Cómo lo cumpliremos |
 |---|---|
@@ -17,17 +17,17 @@ Solución SaaS para gestionar **proyectos, portafolios, recursos, presupuestos y
 | ≥ 5 microservicios protegidos | Autorizador (Lambda authorizer / Cognito) en cada API |
 | BD propia por microservicio | DynamoDB (estructura JSON documentada por servicio) |
 | ≥ 30,000 registros por microservicio | Script de datos ficticios, repartidos en 3 tenants |
-| S3, SNS, SQS | S3 (adjuntos/reportes), SNS + SQS (eventos) |
+| S3, SNS, SQS | S3 (CVs, boletas de pago, reportes), SNS + SQS (eventos) |
 | Frontend | Framework a elección, desplegado en AWS Amplify |
 | Demo | Con 2 tenants distintos |
 
 ### Microservicios propuestos
 
 1. **ms-usuarios** – autenticación, usuarios y roles por tenant
-2. **ms-proyectos** – CRUD de proyectos, estados y fechas
-3. **ms-portafolios** – agrupación y priorización de proyectos
-4. **ms-recursos** – personas/equipos y asignación a proyectos
-5. **ms-presupuestos** – presupuesto, costos y desviaciones
+2. **ms-empleados** – legajo de empleados, áreas, cargos y contratos
+3. **ms-nominas** – planillas, boletas de pago, descuentos y bonos
+4. **ms-reclutamiento** – vacantes, postulantes y proceso de contratación
+5. **ms-desempeno** – evaluaciones de desempeño, objetivos y desarrollo de talento
 6. **ms-notificaciones** – consume eventos (SQS) y notifica (SNS)
 
 > Ajustable según lo que decida el grupo en la Fase 1.
@@ -38,10 +38,10 @@ Solución SaaS para gestionar **proyectos, portafolios, recursos, presupuestos y
 
 | # | Integrante | Rol principal | Responsabilidades |
 |---|---|---|---|
-| 1 | Miguel Espinoza Arnero  | Líder técnico / DevOps | Arquitectura, `serverless.yml`, CI/CD, Amplify, IAM |
-| 2 | Fernando Espinoza | Backend A | ms-usuarios (auth) + ms-proyectos |
-| 3 | Luciano Matias Sanchez Goicochea| Backend B | ms-portafolios + ms-recursos |
-| 4 | Rodrigo Miguel Gomez Pacheco | Backend C | ms-presupuestos + ms-notificaciones (SNS/SQS) |
+| 1 | _(nombre)_ | Líder técnico / DevOps | Arquitectura, `serverless.yml`, CI/CD, Amplify, IAM |
+| 2 | _(nombre)_ | Backend A | ms-usuarios (auth) + ms-empleados |
+| 3 | _(nombre)_ | Backend B | ms-nominas + ms-reclutamiento |
+| 4 | _(nombre)_ | Backend C | ms-desempeno + ms-notificaciones (SNS/SQS) |
 | 5 | _(nombre)_ | Frontend | UI, integración con APIs, login multi-tenant |
 | 6 | _(nombre)_ | Datos / QA / Documentación | Datos ficticios (30k/servicio), pruebas, informe y PPT |
 
@@ -70,7 +70,7 @@ Solución SaaS para gestionar **proyectos, portafolios, recursos, presupuestos y
 **Entregable:** repos creados, roles asignados, tablero activo.
 
 ### Fase 1 – Diseño y arquitectura (26 Oct – 1 Nov)
-- [ ] Definir funcionalidades PPM por microservicio
+- [ ] Definir funcionalidades HCM por microservicio
 - [ ] Estrategia multi-tenant (tenant en token, claves y particiones DynamoDB)
 - [ ] Estructura JSON de cada tabla (documentar para el informe)
 - [ ] Catálogo de eventos SNS/SQS (quién publica, quién consume)
@@ -82,7 +82,7 @@ Solución SaaS para gestionar **proyectos, portafolios, recursos, presupuestos y
 ### Fase 2 – Base de infraestructura (2 – 8 Nov)
 - [ ] Plantilla común de Serverless Framework (stages, tablas, permisos)
 - [ ] Autenticación y autorizador reutilizable para todos los APIs
-- [ ] ms-usuarios y ms-proyectos funcionando con tenant aislado
+- [ ] ms-usuarios y ms-empleados funcionando con tenant aislado
 - [ ] Esqueleto del frontend con login, desplegado en Amplify
 - [ ] Script generador de datos ficticios (3 tenants)
 
@@ -96,15 +96,15 @@ Solución SaaS para gestionar **proyectos, portafolios, recursos, presupuestos y
 **Entregable:** avance demostrable + exposición virtual.
 
 ### Fase 4 – Resto del backend y EDA (15 – 18 Nov)
-- [ ] ms-portafolios, ms-recursos, ms-presupuestos, ms-notificaciones
+- [ ] ms-nominas, ms-reclutamiento, ms-desempeno, ms-notificaciones
 - [ ] Integración SNS → SQS → Lambda consumidoras
-- [ ] S3 para adjuntos/reportes
+- [ ] S3 para CVs, boletas de pago y reportes
 - [ ] Carga de **≥ 30,000 registros por microservicio** en 3 tenants
 
 **Entregable:** los 5+ microservicios desplegados y comunicándose por eventos.
 
 ### Fase 5 – Frontend e integración (17 – 20 Nov)
-- [ ] Pantallas: proyectos, portafolios, recursos, presupuestos, dashboard
+- [ ] Pantallas: empleados, nóminas, vacantes y contratación, evaluaciones de desempeño, dashboard
 - [ ] Consumo de todas las APIs con token y tenant
 - [ ] Pruebas con 2 tenants (verificar aislamiento de datos)
 - [ ] Corrección de errores y manejo de fallos
