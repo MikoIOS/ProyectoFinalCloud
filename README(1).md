@@ -39,7 +39,7 @@ Solución SaaS para gestionar **proyectos, portafolios, recursos, presupuestos y
 | # | Integrante | Rol principal | Responsabilidades |
 |---|---|---|---|
 | 1 | _(nombre)_ | Líder técnico / DevOps | Arquitectura, `serverless.yml`, CI/CD, Amplify, IAM |
-| 2 : Miguel Espinoza Arnero | Backend A | ms-usuarios (auth) + ms-proyectos |
+| 2 | Miguel Espinoza Arnero | Backend A | ms-usuarios (auth) + ms-proyectos |
 | 3 | Luciano Matias Sanchez Goicochea| Backend B | ms-portafolios + ms-recursos |
 | 4 | Rodrigo Miguel Gomez Pacheco | Backend C | ms-presupuestos + ms-notificaciones (SNS/SQS) |
 | 5 | _(nombre)_ | Frontend | UI, integración con APIs, login multi-tenant |
