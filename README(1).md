@@ -24,11 +24,14 @@ Solución SaaS para gestionar **empleados, nóminas, talento, contratación y de
 ### Microservicios propuestos
 
 1. **ms-usuarios** – autenticación, usuarios y roles por tenant
-2. **ms-empleados** – legajo de empleados, áreas, cargos y contratos
-3. **ms-nominas** – planillas, boletas de pago, descuentos y bonos
-4. **ms-reclutamiento** – vacantes, postulantes y proceso de contratación
-5. **ms-desempeno** – evaluaciones de desempeño, objetivos y desarrollo de talento
-6. **ms-notificaciones** – consume eventos (SQS) y notifica (SNS)
+2. **ms-empleados** – Core HR: ficha del empleado, áreas, cargos y organigrama
+3. **ms-nominas** – planillas, boletas, bonos y bandas salariales
+4. **ms-asistencia** – marcaciones, vacaciones y permisos
+5. **ms-reclutamiento** – vacantes, postulantes y onboarding
+6. **ms-desempeno** – evaluaciones, objetivos y reconocimientos
+7. **ms-notificaciones** – consume eventos (SQS) y notifica (SNS)
+
+> Alineado con los ejemplos del enunciado: SAP HCM, BambooHR y Workday. Detalle en `FASE1_DISENO.md`.
 
 > Ajustable según lo que decida el grupo en la Fase 1.
 
@@ -40,10 +43,12 @@ Solución SaaS para gestionar **empleados, nóminas, talento, contratación y de
 |---|---|---|---|
 | 1 | Miguel Espinoza | Líder técnico / DevOps | Arquitectura, `serverless.yml`, CI/CD, Amplify, IAM |
 | 2 | Fernando Espinoza | Backend A | ms-usuarios (auth) + ms-empleados |
-| 3 | Rodrigo Miguel Gomez Pacheco | Backend B | ms-nominas + ms-reclutamiento |
-| 4 | Luciano Matias Sanchez Goicochea| Backend C | ms-desempeno + ms-notificaciones (SNS/SQS) |
-| 5 | _(nombre)_ | Frontend | UI, integración con APIs, login multi-tenant |
-| 6 | _(nombre)_ | Datos / QA / Documentación | Datos ficticios (30k/servicio), pruebas, informe y PPT |
+| 3 | Rodrigo Miguel Gomez Pacheco | Backend B | ms-nominas + ms-asistencia |
+| 4 | Luciano Matias Sanchez Goicochea | Backend C | ms-reclutamiento + ms-desempeno |
+| 5 | _(por definir)_ | Frontend | UI, integración con APIs, login multi-tenant |
+| 6 | _(por definir)_ | Datos / QA / Documentación | ms-notificaciones (SNS/SQS), datos ficticios (30k/servicio), pruebas, informe y PPT |
+
+> Los integrantes 5 y 6 aún no deciden quién hará **Frontend** y quién **Datos / QA / Documentación**.
 
 ---
 
@@ -96,7 +101,7 @@ Solución SaaS para gestionar **empleados, nóminas, talento, contratación y de
 **Entregable:** avance demostrable + exposición virtual.
 
 ### Fase 4 – Resto del backend y EDA (15 – 18 Nov)
-- [ ] ms-nominas, ms-reclutamiento, ms-desempeno, ms-notificaciones
+- [ ] ms-nominas, ms-asistencia, ms-reclutamiento, ms-desempeno, ms-notificaciones
 - [ ] Integración SNS → SQS → Lambda consumidoras
 - [ ] S3 para CVs, boletas de pago y reportes
 - [ ] Carga de **≥ 30,000 registros por microservicio** en 3 tenants
@@ -104,7 +109,7 @@ Solución SaaS para gestionar **empleados, nóminas, talento, contratación y de
 **Entregable:** los 5+ microservicios desplegados y comunicándose por eventos.
 
 ### Fase 5 – Frontend e integración (17 – 20 Nov)
-- [ ] Pantallas: empleados, nóminas, vacantes y contratación, evaluaciones de desempeño, dashboard
+- [ ] Pantallas: empleados, nóminas, asistencia y ausencias, vacantes y onboarding, evaluaciones de desempeño, dashboard, portal del empleado
 - [ ] Consumo de todas las APIs con token y tenant
 - [ ] Pruebas con 2 tenants (verificar aislamiento de datos)
 - [ ] Corrección de errores y manejo de fallos
