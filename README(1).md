@@ -46,7 +46,7 @@ Solución SaaS para gestionar **empleados, nóminas, talento, contratación y de
 | 3 | Rodrigo Miguel Gomez Pacheco | Backend B | ms-nominas + ms-asistencia |
 | 4 | Luciano Matias Sanchez Goicochea | Backend C | ms-reclutamiento + ms-desempeno |
 | 5 | _(por definir)_ | Frontend | UI, integración con APIs, login multi-tenant |
-| 6 | _(por definir)_ | Datos / QA / Documentación | ms-notificaciones (SNS/SQS), datos ficticios (30k/servicio), pruebas, informe y PPT |
+| 6 | Brhandon Gutierrez | Datos / QA / Documentación | ms-notificaciones (SNS/SQS), datos ficticios (30k/servicio), pruebas, informe y PPT |
 
 > Los integrantes 5 y 6 aún no deciden quién hará **Frontend** y quién **Datos / QA / Documentación**.
 
