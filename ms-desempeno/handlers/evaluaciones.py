@@ -1,7 +1,7 @@
 import json
 import os
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
@@ -28,17 +28,47 @@ def _resp(status, body):
     }
 
 
+def _formato_email_evaluacion(datos, tenant_id, fecha):
+    return f"""⭐ Evaluación de desempeño completada
+
+════════════════════════════════════
+📊 DETALLES DE LA EVALUACIÓN
+════════════════════════════════════
+
+👤 Empleado:     {datos.get('empleado_id', '-')}
+👔 Evaluador:    {datos.get('evaluador_id', '-')}
+📅 Periodo:      {datos.get('periodo', '-')}
+🎯 Puntaje:      {datos.get('puntaje', '-')} / 5.0
+🏢 Tenant:       {tenant_id}
+
+🆔 Evaluación:   {datos.get('evaluacion_id', '-')}
+⏰ Fecha:        {fecha}
+
+════════════════════════════════════
+Fuente: ms-desempeno | HCM SaaS Grupo 2
+"""
+
+
 def _publicar_evento(tipo, tenant_id, datos):
+    ahora_utc = datetime.now(timezone.utc)
+    ts = ahora_utc.isoformat()
+    fecha_bonita = ahora_utc.astimezone(timezone(timedelta(hours=-5))).strftime('%d/%m/%Y %H:%M:%S') + ' (Lima)'
     event = {
         'tipo_evento': tipo,
         'tenant_id': tenant_id,
         'origen': 'ms-desempeno',
-        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'timestamp': ts,
         'datos': datos
     }
     sns.publish(
         TopicArn=TOPIC_ARN,
-        Message=json.dumps(event, default=_enc),
+        Subject=f'[HCM/{tenant_id}] {tipo}',
+        Message=json.dumps({
+            'default': json.dumps(event, default=_enc),
+            'sqs': json.dumps(event, default=_enc),
+            'email': _formato_email_evaluacion(datos, tenant_id, fecha_bonita)
+        }),
+        MessageStructure='json',
         MessageAttributes={
             'tipo_evento': {'DataType': 'String', 'StringValue': tipo},
             'tenant_id': {'DataType': 'String', 'StringValue': tenant_id}

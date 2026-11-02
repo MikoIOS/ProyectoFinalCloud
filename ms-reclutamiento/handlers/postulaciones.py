@@ -1,7 +1,7 @@
 import json
 import os
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import boto3
 from boto3.dynamodb.conditions import Key
 
@@ -23,17 +23,48 @@ def _resp(status, body):
     }
 
 
+def _formato_email_postulante(datos, tenant_id, fecha):
+    return f"""🎉 ¡Nuevo postulante contratado!
+
+Un candidato ha sido contratado para una vacante abierta.
+
+════════════════════════════════════
+📋 DETALLES DE LA CONTRATACIÓN
+════════════════════════════════════
+
+👤 Candidato:    {datos.get('nombre', '-')}
+📧 Email:        {datos.get('email', '-')}
+🏢 Tenant:       {tenant_id}
+📌 Vacante:      {datos.get('vacante_id', '-')}
+🔗 Postulación:  {datos.get('postulacion_id', '-')}
+
+⏰ Fecha:        {fecha}
+
+════════════════════════════════════
+Fuente: ms-reclutamiento | HCM SaaS Grupo 2
+"""
+
+
 def _publicar_evento(tipo, tenant_id, datos):
+    ahora_utc = datetime.now(timezone.utc)
+    ts = ahora_utc.isoformat()
+    fecha_bonita = ahora_utc.astimezone(timezone(timedelta(hours=-5))).strftime('%d/%m/%Y %H:%M:%S') + ' (Lima)'
     event = {
         'tipo_evento': tipo,
         'tenant_id': tenant_id,
         'origen': 'ms-reclutamiento',
-        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'timestamp': ts,
         'datos': datos
     }
     sns.publish(
         TopicArn=TOPIC_ARN,
-        Message=json.dumps(event),
+        Subject=f'[HCM/{tenant_id}] {tipo}',
+        Message=json.dumps({
+            'default': json.dumps(event),
+            'sqs': json.dumps(event),
+            'email': _formato_email_postulante(datos, tenant_id, fecha_bonita)
+        }),
+        MessageStructure='json',
         MessageAttributes={
             'tipo_evento': {'DataType': 'String', 'StringValue': tipo},
             'tenant_id': {'DataType': 'String', 'StringValue': tenant_id}
