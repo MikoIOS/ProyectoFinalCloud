@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Backend C — HCM API Docs</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui.min.css">
+  <style>
+    body { margin: 0; }
+    .topbar { display: none; }
+    .swagger-ui .info { margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-standalone-preset.min.js"></script>
+  <script>
+    const yamlSpec = `openapi: 3.0.3
+info:
+  title: Backend C — HCM SaaS (ms-reclutamiento + ms-desempeno)
+  version: 1.0.0
+  description: |
+    API de los dos microservicios de talento del HCM.
+
+    - **ms-reclutamiento**: vacantes, postulaciones (con CV en S3), pipeline de contratación y onboarding
+    - **ms-desempeno**: evaluaciones y reconocimientos entre empleados
+
+    Multi-tenant: \`tenant_id\` como partition key. Tenants válidos: \`andina\`, \`pacifico\`, \`sierra\`.
+
+    Publican eventos a un SNS topic compartido \`hcm-eventos-dev\` para integración vía EDA.
+  contact:
+    name: Luciano Sánchez (Backend C)
+    email: luciano.sanchez@utec.edu.pe
+
+servers:
+  - url: https://k9zoy1ou55.execute-api.us-east-1.amazonaws.com
+    description: ms-reclutamiento (dev)
+  - url: https://b5k8pbnfqa.execute-api.us-east-1.amazonaws.com
+    description: ms-desempeno (dev)
+
+tags:
+  - name: Vacantes
+    description: ms-reclutamiento — CRUD de vacantes abiertas
+  - name: Postulaciones
+    description: ms-reclutamiento — Postulantes con CV en S3 y pipeline de contratación
+  - name: Onboarding
+    description: ms-reclutamiento — Tareas de onboarding del nuevo empleado
+  - name: Evaluaciones
+    description: ms-desempeno — Evaluaciones de desempeño por periodo
+  - name: Reconocimientos
+    description: ms-desempeno — Reconocimientos entre empleados
+
+paths:
+  # ────────────────────────────── ms-reclutamiento ──────────────────────────────
+  /vacantes:
+    post:
+      tags: [Vacantes]
+      summary: Crear vacante
+      servers:
+        - url: https://k9zoy1ou55.execute-api.us-east-1.amazonaws.com
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VacanteCreate'
+            example:
+              tenant_id: andina
+              titulo: Desarrollador Backend
+              area: Tecnología
+      responses:
+        '201':
+          description: Vacante creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vacante'
+
+    get:
+      tags: [Vacantes]
+      summary: Listar vacantes del tenant
+      servers:
+        - url: https://k9zoy1ou55.execute-api.us-east-1.amazonaws.com
+      parameters:
+        - $ref: '#/components/parameters/tenantIdQuery'
+      responses:
+        '200':
+          description: Lista de vacantes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vacante'
+
+  /postulaciones:
+    post:
+      tags: [Postulaciones]
+      summary: Crear postulación (devuelve URL S3 prefirmada para subir el CV)
+      servers:
+        - url: https://k9zoy1ou55.execute-api.us-east-1.amazonaws.com
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostulacionCreate'
+            example:
+              tenant_id: andina
+              vacante_id: vac-77adca25
+              nombre: Luis Ramos
+              email: luis.ramos@test.com
+      responses:
+        '201':
+          description: Postulación creada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  postulacion:
+                    $ref: '#/components/schemas/Postulacion'
+                  cv_upload_url:
+                    type: string
+                    description: URL S3 prefirmada (PUT) para subir el CV. Expira en 10 minutos.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /vacantes/{vacante_id}/postulaciones:
+    get:
+      tags: [Postulaciones]
+      summary: Listar postulaciones de una vacante (GSI vacante-index)
+      servers:
+        - url: https://k9zoy1ou55.execute-api.us-east-1.amazonaws.com
+      parameters:
+        - name: vacante_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: vac-77adca25
+        - $ref: '#/components/parameters/tenantIdQuery'
+      responses:
+        '200':
+          description: Lista de postulaciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Postulacion'
+
+  /postulaciones/{postulacion_id}/estado:
+    patch:
+      tags: [Postulaciones]
+      summary: Avanzar postulación en el pipeline
+      description: |
+        Pipeline válido: \`RECIBIDO → ENTREVISTA → OFERTA → CONTRATADO / RECHAZADO\`.
+
+        Cuando el estado llega a \`CONTRATADO\`, se publica el evento \`PostulanteContratado\` al topic SNS \`hcm-eventos-dev\`.
+      servers:
+        - url: https://k9zoy1ou55.execute-api.us-east-1.amazonaws.com
+      parameters:
+        - name: postulacion_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: pos-18c920ae
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenant_id, estado]
+              properties:
+                tenant_id:
+                  type: string
+                estado:
+                  $ref: '#/components/schemas/EstadoPostulacion'
+      responses:
+        '200':
+          description: Postulación actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Postulacion'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /onboarding:
+    post:
+      tags: [Onboarding]
+      summary: Crear tarea de onboarding
+      servers:
+        - url: https://k9zoy1ou55.execute-api.us-east-1.amazonaws.com
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingCreate'
+            example:
+              tenant_id: andina
+              empleado_id: emp-000045
+              tarea: Entregar laptop
+      responses:
+        '201':
+          description: Tarea creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Onboarding'
+
+  /onboarding/{empleado_id}:
+    get:
+      tags: [Onboarding]
+      summary: Listar tareas de onboarding de un empleado
+      servers:
+        - url: https://k9zoy1ou55.execute-api.us-east-1.amazonaws.com
+      parameters:
+        - name: empleado_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: emp-000045
+        - $ref: '#/components/parameters/tenantIdQuery'
+      responses:
+        '200':
+          description: Lista de tareas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Onboarding'
+
+  /onboarding/{empleado_id}/{onboarding_id}:
+    patch:
+      tags: [Onboarding]
+      summary: Marcar tarea como completada
+      servers:
+        - url: https://k9zoy1ou55.execute-api.us-east-1.amazonaws.com
+      parameters:
+        - name: empleado_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: onboarding_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/tenantIdQuery'
+      responses:
+        '200':
+          description: Tarea completada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Onboarding'
+
+  # ────────────────────────────── ms-desempeno ──────────────────────────────
+  /evaluaciones:
+    post:
+      tags: [Evaluaciones]
+      summary: Crear evaluación (estado inicial PENDIENTE)
+      servers:
+        - url: https://b5k8pbnfqa.execute-api.us-east-1.amazonaws.com
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluacionCreate'
+            example:
+              tenant_id: andina
+              empleado_id: emp-000045
+              evaluador_id: emp-000010
+              periodo: 2026-S2
+              puntaje: 4.3
+              competencias:
+                - nombre: Trabajo en equipo
+                  puntaje: 5
+                - nombre: Puntualidad
+                  puntaje: 4
+              objetivos: [Automatizar reporte mensual]
+              comentarios: Buen desempeño
+      responses:
+        '201':
+          description: Evaluación creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluacion'
+
+    get:
+      tags: [Evaluaciones]
+      summary: Listar evaluaciones de un empleado (GSI empleado-index)
+      servers:
+        - url: https://b5k8pbnfqa.execute-api.us-east-1.amazonaws.com
+      parameters:
+        - $ref: '#/components/parameters/tenantIdQuery'
+        - name: empleado
+          in: query
+          required: true
+          schema:
+            type: string
+          example: emp-000045
+      responses:
+        '200':
+          description: Lista de evaluaciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Evaluacion'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /evaluaciones/{evaluacion_id}:
+    put:
+      tags: [Evaluaciones]
+      summary: Actualizar evaluación
+      description: |
+        Al dejar \`estado=COMPLETADA\` se publica el evento \`EvaluacionCompletada\` al topic SNS \`hcm-eventos-dev\`.
+      servers:
+        - url: https://b5k8pbnfqa.execute-api.us-east-1.amazonaws.com
+      parameters:
+        - name: evaluacion_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: eva-f2fc617e
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluacionUpdate'
+            example:
+              tenant_id: andina
+              estado: COMPLETADA
+              puntaje: 4.5
+              comentarios: Cumplió los objetivos
+      responses:
+        '200':
+          description: Evaluación actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluacion'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /reconocimientos:
+    post:
+      tags: [Reconocimientos]
+      summary: Crear reconocimiento entre empleados
+      servers:
+        - url: https://b5k8pbnfqa.execute-api.us-east-1.amazonaws.com
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReconocimientoCreate'
+            example:
+              tenant_id: andina
+              de_empleado_id: emp-000010
+              para_empleado_id: emp-000045
+              mensaje: Excelente trabajo en el proyecto X
+      responses:
+        '201':
+          description: Reconocimiento creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reconocimiento'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  parameters:
+    tenantIdQuery:
+      name: tenant_id
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [andina, pacifico, sierra]
+      example: andina
+      description: Tenant que ejecuta la consulta
+
+  responses:
+    BadRequest:
+      description: Request inválido
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+
+  schemas:
+    # ────── Reclutamiento ──────
+    VacanteCreate:
+      type: object
+      required: [tenant_id, titulo]
+      properties:
+        tenant_id:
+          type: string
+        titulo:
+          type: string
+        area:
+          type: string
+
+    Vacante:
+      type: object
+      properties:
+        tenant_id:
+          type: string
+        sk:
+          type: string
+          example: VACANTE#vac-77adca25
+        titulo:
+          type: string
+        area:
+          type: string
+        estado:
+          type: string
+          enum: [ABIERTA, CERRADA]
+        fecha_publicacion:
+          type: string
+          format: date-time
+
+    PostulacionCreate:
+      type: object
+      required: [tenant_id, vacante_id]
+      properties:
+        tenant_id:
+          type: string
+        vacante_id:
+          type: string
+        nombre:
+          type: string
+        email:
+          type: string
+          format: email
+
+    Postulacion:
+      type: object
+      properties:
+        tenant_id:
+          type: string
+        sk:
+          type: string
+          example: POSTULACION#pos-18c920ae
+        postulacion_id:
+          type: string
+        vacante_id:
+          type: string
+        nombre:
+          type: string
+        email:
+          type: string
+        cv_s3_key:
+          type: string
+          description: Key del CV en el bucket hcm-cvs-dev
+        estado:
+          $ref: '#/components/schemas/EstadoPostulacion'
+        fecha:
+          type: string
+          format: date-time
+        fecha_actualizacion:
+          type: string
+          format: date-time
+
+    EstadoPostulacion:
+      type: string
+      enum: [RECIBIDO, ENTREVISTA, OFERTA, CONTRATADO, RECHAZADO]
+
+    OnboardingCreate:
+      type: object
+      required: [tenant_id, empleado_id, tarea]
+      properties:
+        tenant_id:
+          type: string
+        empleado_id:
+          type: string
+        tarea:
+          type: string
+
+    Onboarding:
+      type: object
+      properties:
+        tenant_id:
+          type: string
+        sk:
+          type: string
+          example: ONBOARDING#emp-000045#onb-96c43958
+        onboarding_id:
+          type: string
+        empleado_id:
+          type: string
+        tarea:
+          type: string
+        completada:
+          type: boolean
+        fecha_creacion:
+          type: string
+          format: date-time
+        fecha_completada:
+          type: string
+          format: date-time
+
+    # ────── Desempeño ──────
+    Competencia:
+      type: object
+      properties:
+        nombre:
+          type: string
+          example: Trabajo en equipo
+        puntaje:
+          type: number
+          minimum: 1
+          maximum: 5
+
+    EvaluacionCreate:
+      type: object
+      required: [tenant_id, empleado_id]
+      properties:
+        tenant_id:
+          type: string
+        empleado_id:
+          type: string
+        evaluador_id:
+          type: string
+        periodo:
+          type: string
+          example: 2026-S2
+        puntaje:
+          type: number
+          minimum: 0
+          maximum: 5
+        competencias:
+          type: array
+          items:
+            $ref: '#/components/schemas/Competencia'
+        objetivos:
+          type: array
+          items:
+            type: string
+        comentarios:
+          type: string
+
+    EvaluacionUpdate:
+      type: object
+      required: [tenant_id]
+      properties:
+        tenant_id:
+          type: string
+        estado:
+          $ref: '#/components/schemas/EstadoEvaluacion'
+        puntaje:
+          type: number
+        competencias:
+          type: array
+          items:
+            $ref: '#/components/schemas/Competencia'
+        objetivos:
+          type: array
+          items:
+            type: string
+        comentarios:
+          type: string
+
+    Evaluacion:
+      type: object
+      properties:
+        tenant_id:
+          type: string
+        sk:
+          type: string
+          example: eva-f2fc617e
+        evaluacion_id:
+          type: string
+        empleado_id:
+          type: string
+        evaluador_id:
+          type: string
+        periodo:
+          type: string
+        puntaje:
+          type: number
+        competencias:
+          type: array
+          items:
+            $ref: '#/components/schemas/Competencia'
+        objetivos:
+          type: array
+          items:
+            type: string
+        comentarios:
+          type: string
+        estado:
+          $ref: '#/components/schemas/EstadoEvaluacion'
+        fecha_creacion:
+          type: string
+          format: date-time
+        fecha_actualizacion:
+          type: string
+          format: date-time
+
+    EstadoEvaluacion:
+      type: string
+      enum: [PENDIENTE, EN_PROGRESO, COMPLETADA]
+
+    ReconocimientoCreate:
+      type: object
+      required: [tenant_id, de_empleado_id, para_empleado_id, mensaje]
+      properties:
+        tenant_id:
+          type: string
+        de_empleado_id:
+          type: string
+        para_empleado_id:
+          type: string
+        mensaje:
+          type: string
+
+    Reconocimiento:
+      type: object
+      properties:
+        tenant_id:
+          type: string
+        sk:
+          type: string
+          example: rec-8c8eef20
+        reconocimiento_id:
+          type: string
+        empleado_id:
+          type: string
+          description: Empleado que RECIBE el reconocimiento
+        de_empleado_id:
+          type: string
+          description: Empleado que DA el reconocimiento
+        mensaje:
+          type: string
+        fecha:
+          type: string
+          format: date-time
+
+    # ────── Eventos EDA ──────
+    PostulanteContratadoEvent:
+      type: object
+      description: Evento publicado al topic SNS cuando una postulación llega a CONTRATADO
+      properties:
+        tipo_evento:
+          type: string
+          example: PostulanteContratado
+        tenant_id:
+          type: string
+        origen:
+          type: string
+          example: ms-reclutamiento
+        timestamp:
+          type: string
+          format: date-time
+        datos:
+          type: object
+          properties:
+            postulacion_id:
+              type: string
+            vacante_id:
+              type: string
+            nombre:
+              type: string
+            email:
+              type: string
+
+    EvaluacionCompletadaEvent:
+      type: object
+      description: Evento publicado al topic SNS cuando una evaluación pasa a COMPLETADA
+      properties:
+        tipo_evento:
+          type: string
+          example: EvaluacionCompletada
+        tenant_id:
+          type: string
+        origen:
+          type: string
+          example: ms-desempeno
+        timestamp:
+          type: string
+          format: date-time
+        datos:
+          type: object
+          properties:
+            evaluacion_id:
+              type: string
+            empleado_id:
+              type: string
+            evaluador_id:
+              type: string
+            periodo:
+              type: string
+            puntaje:
+              type: number
+`;
+    window.onload = () => {
+      const spec = jsyaml.load(yamlSpec);
+      SwaggerUIBundle({
+        spec: spec,
+        dom_id: '#swagger-ui',
+        presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+        layout: 'BaseLayout',
+        deepLinking: true,
+        docExpansion: 'list',
+        tryItOutEnabled: true,
+      });
+    };
+  </script>
+</body>
+</html>
