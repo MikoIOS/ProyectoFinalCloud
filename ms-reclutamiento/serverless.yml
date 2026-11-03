@@ -12,7 +12,7 @@ provider:
     EVENTS_TOPIC_ARN:
       Ref: HcmEventosTopic
   iam:
-    role: arn:aws:iam::555330235657:role/LabRole
+    role: arn:aws:iam::851725431647:role/LabRole
 
 functions:
   crearVacante:

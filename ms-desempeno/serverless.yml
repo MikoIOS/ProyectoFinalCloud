@@ -11,7 +11,7 @@ provider:
     EVENTS_TOPIC_ARN:
       Fn::ImportValue: hcm-eventos-topic-arn-${sls:stage}
   iam:
-    role: arn:aws:iam::555330235657:role/LabRole
+    role: arn:aws:iam::851725431647:role/LabRole
 
 functions:
   crearEvaluacion:
