@@ -1,17 +1,17 @@
 {
   "info": {
-    "name": "ms-empleados · aislamiento, roles y flujo con ms-usuarios",
+    "name": "ms-empleados · HCM API (dev)",
     "description": "Ejecutar con Collection Runner EN ORDEN. Requiere ms-usuarios y ms-empleados desplegados y los dos seeds cargados. Cambia base_usuarios y base_empleados por las URLs de cada API (https://<id>.execute-api.us-east-1.amazonaws.com/dev). La carpeta 'Flujo' espera 6 s entre pasos para que los eventos lleguen por SNS -> SQS.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_usuarios",
-      "value": "https://REEMPLAZAR-usuarios.execute-api.us-east-1.amazonaws.com/dev"
+      "value": "https://ckuqmvszfj.execute-api.us-east-1.amazonaws.com/dev"
     },
     {
       "key": "base_empleados",
-      "value": "https://REEMPLAZAR-empleados.execute-api.us-east-1.amazonaws.com/dev"
+      "value": "https://39vy8bpqn4.execute-api.us-east-1.amazonaws.com/dev"
     }
   ],
   "item": [

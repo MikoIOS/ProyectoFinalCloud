@@ -1,0 +1,1174 @@
+{
+  "info": {
+    "name": "ms-empleados · HCM API (dev)",
+    "description": "Ejecutar con Collection Runner EN ORDEN. Requiere ms-usuarios y ms-empleados desplegados y los dos seeds cargados. Cambia base_usuarios y base_empleados por las URLs de cada API (https://<id>.execute-api.us-east-1.amazonaws.com/dev). La carpeta 'Flujo' espera 6 s entre pasos para que los eventos lleguen por SNS -> SQS.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_usuarios",
+      "value": "https://ckuqmvszfj.execute-api.us-east-1.amazonaws.com/dev"
+    },
+    {
+      "key": "base_empleados",
+      "value": "https://39vy8bpqn4.execute-api.us-east-1.amazonaws.com/dev"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Setup (logins en ms-usuarios)",
+      "item": [
+        {
+          "name": "Login andina admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_usuarios}}/auth/login",
+              "host": [
+                "{{base_usuarios}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"email\": \"admin@andina.pe\",\n  \"password\": \"Demo1234!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.collectionVariables.set(\"token_andina\", pm.response.json().token);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = () => String(Math.floor(30000000 + Math.random() * 60000000));",
+                  "pm.collectionVariables.set(\"doc_aislamiento\", r());",
+                  "pm.collectionVariables.set(\"doc_flujo\", r());",
+                  "pm.collectionVariables.set(\"email_aislamiento\", \"aisl\" + Date.now() + \"@test.pe\");",
+                  "pm.collectionVariables.set(\"email_flujo\", \"flujo\" + Date.now() + \"@test.pe\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login pacifico admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_usuarios}}/auth/login",
+              "host": [
+                "{{base_usuarios}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"pacifico\",\n  \"email\": \"admin@pacifico.pe\",\n  \"password\": \"Demo1234!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.collectionVariables.set(\"token_pacifico\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login andina gerente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_usuarios}}/auth/login",
+              "host": [
+                "{{base_usuarios}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"email\": \"gerente@andina.pe\",\n  \"password\": \"Demo1234!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.collectionVariables.set(\"token_gerente\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login andina empleado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_usuarios}}/auth/login",
+              "host": [
+                "{{base_usuarios}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"email\": \"empleado@andina.pe\",\n  \"password\": \"Demo1234!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.collectionVariables.set(\"token_empleado\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Aislamiento entre tenants",
+      "item": [
+        {
+          "name": "1. Listar andina: solo empleados de andina (emails @andina.pe del seed)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados?limit=200",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "200"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test(\"ninguno de pacifico\", () => pm.expect(pm.response.json().items.every(i => !i.email.endsWith(\"@pacifico.pe\") && !i.email.endsWith(\"@sierra.pe\"))).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1b. Resumen andina",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados/resumen",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados",
+                "resumen"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"trae total, por_estado y por_area\", () => { pm.expect(b.total).to.be.a(\"number\"); pm.expect(b.por_estado).to.have.keys(\"ACTIVO\",\"VACACIONES\",\"CESADO\"); pm.expect(b.por_area).to.be.an(\"object\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3a. Crear empleado en PACIFICO",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_pacifico}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Prueba\",\n  \"apellidos\": \"Aislamiento\",\n  \"documento\": \"{{doc_aislamiento}}\",\n  \"email\": \"{{email_aislamiento}}\",\n  \"area\": \"Tecnología\",\n  \"cargo\": \"Analista de Datos\",\n  \"fecha_ingreso\": \"2026-11-03\",\n  \"salario_base\": 4200.5,\n  \"jefe_id\": \"emp-000001\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.expect(pm.response.code).to.eql(201));",
+                  "pm.collectionVariables.set(\"id_pacifico\", pm.response.json().empleado_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Pedir ese empleado con token de ANDINA => 404 (no 403)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados/{{id_pacifico}}",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados",
+                "{{id_pacifico}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.expect(pm.response.code).to.eql(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3b. Crear en andina con tenant_id=pacifico en el body: se ignora",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Prueba\",\n  \"apellidos\": \"Aislamiento\",\n  \"documento\": \"{{doc_aislamiento}}\",\n  \"email\": \"{{email_aislamiento}}\",\n  \"area\": \"Tecnología\",\n  \"cargo\": \"Analista de Datos\",\n  \"fecha_ingreso\": \"2026-11-03\",\n  \"salario_base\": 4200.5,\n  \"jefe_id\": \"emp-000001\",\n  \"tenant_id\": \"pacifico\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.expect(pm.response.code).to.eql(201));",
+                  "pm.test(\"quedó en andina\", () => pm.expect(pm.response.json().tenant_id).to.eql(\"andina\"));",
+                  "pm.test(\"mismo documento en dos tenants es válido (8)\", () => pm.expect(pm.response.json().documento).to.eql(pm.collectionVariables.get(\"doc_aislamiento\")));",
+                  "pm.collectionVariables.set(\"id_andina\", pm.response.json().empleado_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. Repetir el documento en andina => 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Prueba\",\n  \"apellidos\": \"Aislamiento\",\n  \"documento\": \"{{doc_aislamiento}}\",\n  \"email\": \"{{email_aislamiento}}\",\n  \"area\": \"Tecnología\",\n  \"cargo\": \"Analista de Datos\",\n  \"fecha_ingreso\": \"2026-11-03\",\n  \"salario_base\": 4200.5,\n  \"jefe_id\": \"emp-000001\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.expect(pm.response.code).to.eql(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar un empleado de pacifico con token de andina => 404",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados/{{id_pacifico}}",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados",
+                "{{id_pacifico}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cargo\": \"Hackeado\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.expect(pm.response.code).to.eql(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5a. Sin token => 401",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.expect(pm.response.code).to.eql(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5b. Token alterado => 401/403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}x"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"401 o 403\", () => pm.expect([401, 403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Roles y datos sensibles",
+      "item": [
+        {
+          "name": "6a. Empleado crea empleado => 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Prueba\",\n  \"apellidos\": \"Aislamiento\",\n  \"documento\": \"{{doc_aislamiento}}\",\n  \"email\": \"{{email_aislamiento}}\",\n  \"area\": \"Tecnología\",\n  \"cargo\": \"Analista de Datos\",\n  \"fecha_ingreso\": \"2026-11-03\",\n  \"salario_base\": 4200.5,\n  \"jefe_id\": \"emp-000001\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.expect(pm.response.code).to.eql(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6b. Empleado lista empleados => 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.expect(pm.response.code).to.eql(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6c. Empleado ve otra ficha => 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados/{{id_andina}}",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados",
+                "{{id_andina}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.expect(pm.response.code).to.eql(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6d. Gerente lista => 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_gerente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados?limit=5",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.expect(pm.response.code).to.eql(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6e. Gerente ve una ficha SIN salario ni documento",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_gerente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados/{{id_andina}}",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados",
+                "{{id_andina}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test(\"sin datos sensibles\", () => { const b = pm.response.json(); pm.expect(b).to.not.have.property(\"salario_base\"); pm.expect(b).to.not.have.property(\"documento\"); pm.expect(b.cargo).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6f. Gerente no puede crear => 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_gerente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Prueba\",\n  \"apellidos\": \"Aislamiento\",\n  \"documento\": \"{{doc_aislamiento}}\",\n  \"email\": \"{{email_aislamiento}}\",\n  \"area\": \"Tecnología\",\n  \"cargo\": \"Analista de Datos\",\n  \"fecha_ingreso\": \"2026-11-03\",\n  \"salario_base\": 4200.5,\n  \"jefe_id\": \"emp-000001\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.expect(pm.response.code).to.eql(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin ve la ficha completa (con salario)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados/{{id_andina}}",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados",
+                "{{id_andina}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test(\"con salario y documento\", () => { const b = pm.response.json(); pm.expect(b.salario_base).to.be.a(\"number\"); pm.expect(b.documento).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Autoservicio",
+      "item": [
+        {
+          "name": "Mi ficha (empleado) => 200 con mi salario",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados/me",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados",
+                "me"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test(\"es la ficha del empleado demo\", () => { const b = pm.response.json(); pm.expect(b.email).to.eql(\"empleado@andina.pe\"); pm.expect(b.salario_base).to.be.a(\"number\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar mi teléfono => 200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados/me",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados",
+                "me"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telefono\": \"987654321\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test(\"teléfono actualizado\", () => pm.expect(pm.response.json().telefono).to.eql(\"987654321\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Intentar subirme el sueldo => 400",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados/me",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados",
+                "me"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"salario_base\": 99999\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.expect(pm.response.code).to.eql(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Flujo integrado con ms-usuarios (eventos)",
+      "item": [
+        {
+          "name": "Flujo 1. Crear empleado en andina (publica EmpleadoCreado)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Prueba\",\n  \"apellidos\": \"Aislamiento\",\n  \"documento\": \"{{doc_flujo}}\",\n  \"email\": \"{{email_flujo}}\",\n  \"area\": \"Tecnología\",\n  \"cargo\": \"Analista de Datos\",\n  \"fecha_ingreso\": \"2026-11-03\",\n  \"salario_base\": 4200.5,\n  \"jefe_id\": \"emp-000001\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.expect(pm.response.code).to.eql(201));",
+                  "pm.test(\"sin aviso de evento fallido\", () => pm.expect(pm.response.json()).to.not.have.property(\"aviso\"));",
+                  "pm.collectionVariables.set(\"id_flujo\", pm.response.json().empleado_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Flujo 2. ms-usuarios creó el usuario: login con email y documento como clave => 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_usuarios}}/auth/login",
+              "host": [
+                "{{base_usuarios}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"email\": \"{{email_flujo}}\",\n  \"password\": \"{{doc_flujo}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test(\"debe cambiar la contraseña\", () => pm.expect(pm.response.json().usuario.debe_cambiar_password).to.be.true);",
+                  "pm.test(\"rol empleado y vinculado\", () => { const u = pm.response.json().usuario; pm.expect(u.rol).to.eql(\"empleado\"); pm.expect(u.empleado_id).to.eql(pm.collectionVariables.get(\"id_flujo\")); });"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "setTimeout(function () {}, 6000);  // da tiempo a SNS -> SQS -> Lambda"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Flujo 3. Cesar al empleado (publica EmpleadoCesado)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados/{{id_flujo}}/estado",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados",
+                "{{id_flujo}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"CESADO\",\n  \"fecha_cese\": \"2026-11-30\",\n  \"motivo\": \"Prueba de flujo\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test(\"CESADO\", () => pm.expect(pm.response.json().estado).to.eql(\"CESADO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Flujo 4. ms-usuarios desactivó la cuenta: login => 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_usuarios}}/auth/login",
+              "host": [
+                "{{base_usuarios}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"email\": \"{{email_flujo}}\",\n  \"password\": \"{{doc_flujo}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.expect(pm.response.code).to.eql(403));"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "setTimeout(function () {}, 6000);  // da tiempo a SNS -> SQS -> Lambda"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Flujo 5. Un cesado no vuelve: pasar a ACTIVO => 409",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_empleados}}/empleados/{{id_flujo}}/estado",
+              "host": [
+                "{{base_empleados}}"
+              ],
+              "path": [
+                "empleados",
+                "{{id_flujo}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"ACTIVO\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.expect(pm.response.code).to.eql(409));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
