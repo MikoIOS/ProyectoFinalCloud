@@ -1,0 +1,330 @@
+{
+  "info": {
+    "name": "ms-desempeno · HCM API (dev)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Desempeño: evaluaciones (crear/listar/actualizar) y reconocimientos. Sin auth (API pública dev)."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://5cznb1nbhg.execute-api.us-east-1.amazonaws.com"
+    },
+    {
+      "key": "evaluacion_id",
+      "value": ""
+    },
+    {
+      "key": "empleado_id",
+      "value": "emp-000002"
+    },
+    {
+      "key": "evaluador_id",
+      "value": "emp-000001"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Evaluaciones",
+      "item": [
+        {
+          "name": "Crear evaluación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluaciones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"empleado_id\": \"{{empleado_id}}\",\n  \"evaluador_id\": \"{{evaluador_id}}\",\n  \"periodo\": \"2026-Q4\",\n  \"puntaje\": 4.5,\n  \"competencias\": [\n    \"trabajo en equipo\",\n    \"liderazgo\"\n  ],\n  \"objetivos\": [\n    \"cerrar OKRs\"\n  ],\n  \"comentarios\": \"Buen desempeño\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json(); if(j.evaluacion_id){pm.collectionVariables.set('evaluacion_id',j.evaluacion_id);}",
+                  "pm.test('201',()=>pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar evaluaciones del empleado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluaciones?tenant_id=andina&empleado={{empleado_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluaciones"
+              ],
+              "query": [
+                {
+                  "key": "tenant_id",
+                  "value": "andina"
+                },
+                {
+                  "key": "empleado",
+                  "value": "{{empleado_id}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Completar evaluación (publica SNS)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluaciones/{{evaluacion_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluaciones",
+                "{{evaluacion_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"puntaje\": 4.8,\n  \"estado\": \"COMPLETADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json(); pm.test('estado COMPLETADA',()=>pm.expect(j.estado).to.eql('COMPLETADA'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 Reconocimientos",
+      "item": [
+        {
+          "name": "Crear reconocimiento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reconocimientos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reconocimientos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"de_empleado_id\": \"{{evaluador_id}}\",\n  \"para_empleado_id\": \"{{empleado_id}}\",\n  \"mensaje\": \"Gracias por el esfuerzo en el cierre\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201',()=>pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Validaciones",
+      "item": [
+        {
+          "name": "Listar sin ?empleado => 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluaciones?tenant_id=andina",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluaciones"
+              ],
+              "query": [
+                {
+                  "key": "tenant_id",
+                  "value": "andina"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400',()=>pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear evaluación sin empleado_id => 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluaciones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"andina\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400',()=>pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Estado inválido => 400",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluaciones/{{evaluacion_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluaciones",
+                "{{evaluacion_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"estado\": \"MALO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400',()=>pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
