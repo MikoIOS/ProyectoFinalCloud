@@ -1,0 +1,191 @@
+service: ms-usuarios
+
+frameworkVersion: ">=3"
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: false      # solo hay dependencias en Python puro (pyjwt)
+    slim: true
+  auth:                      # Authorizer propio; los demás servicios usan su ARN (ver Outputs)
+    name: authorizer
+    type: token
+    identitySource: method.request.header.Authorization
+    resultTtlInSeconds: 300
+
+package:
+  patterns:
+    - "!tests/**"
+    - "!scripts/**"
+    - "!postman/**"
+    - "!node_modules/**"
+    - "!.venv/**"
+    - "!requirements-dev.txt"
+
+provider:
+  name: aws
+  runtime: python3.12
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  timeout: 10
+  iam:
+    role: ${env:LAB_ROLE_ARN}   # AWS Academy: arn:aws:iam::<cuenta>:role/LabRole
+  environment:
+    TABLE_USUARIOS: hcm-usuarios
+    JWT_SECRET: ${env:JWT_SECRET}
+    TOPIC_ARN: !Ref EventosTopic
+
+functions:
+  authorizer:
+    handler: src/handlers/authorizer.handler
+
+  ping:
+    handler: src/handlers/auth.ping
+    events:
+      - http: { path: ping, method: get, cors: true }
+
+  login:
+    handler: src/handlers/auth.login
+    events:
+      - http: { path: auth/login, method: post, cors: true }
+
+  cambiarPassword:
+    handler: src/handlers/auth.cambiar_password
+    events:
+      - http: { path: auth/cambiar-password, method: post, cors: true, authorizer: "${self:custom.auth}" }
+
+  miUsuario:
+    handler: src/handlers/usuarios.mi_usuario
+    events:
+      - http: { path: usuarios/me, method: get, cors: true, authorizer: "${self:custom.auth}" }
+
+  crearUsuario:
+    handler: src/handlers/usuarios.crear
+    events:
+      - http: { path: usuarios, method: post, cors: true, authorizer: "${self:custom.auth}" }
+
+  listarUsuarios:
+    handler: src/handlers/usuarios.listar
+    events:
+      - http: { path: usuarios, method: get, cors: true, authorizer: "${self:custom.auth}" }
+
+  obtenerUsuario:
+    handler: src/handlers/usuarios.obtener
+    events:
+      - http: { path: "usuarios/{id}", method: get, cors: true, authorizer: "${self:custom.auth}" }
+
+  actualizarUsuario:
+    handler: src/handlers/usuarios.actualizar
+    events:
+      - http: { path: "usuarios/{id}", method: patch, cors: true, authorizer: "${self:custom.auth}" }
+
+  procesarEventos:
+    handler: src/handlers/eventos.handler
+    events:
+      - sqs:
+          arn: !GetAtt ColaUsuarios.Arn
+          batchSize: 5
+          functionResponseType: ReportBatchItemFailures
+
+resources:
+  Resources:
+    TablaUsuarios:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: hcm-usuarios
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - { AttributeName: tenant_id,   AttributeType: S }
+          - { AttributeName: user_id,     AttributeType: S }
+          - { AttributeName: email,       AttributeType: S }
+          - { AttributeName: empleado_id, AttributeType: S }
+        KeySchema:
+          - { AttributeName: tenant_id, KeyType: HASH }
+          - { AttributeName: user_id,   KeyType: RANGE }
+        GlobalSecondaryIndexes:
+          - IndexName: email-index
+            KeySchema:
+              - { AttributeName: tenant_id, KeyType: HASH }
+              - { AttributeName: email,     KeyType: RANGE }
+            Projection: { ProjectionType: ALL }
+          - IndexName: empleado-index
+            KeySchema:
+              - { AttributeName: tenant_id,   KeyType: HASH }
+              - { AttributeName: empleado_id, KeyType: RANGE }
+            Projection: { ProjectionType: KEYS_ONLY }
+
+    # --- Eventos: el topic lo crea ms-usuarios y lo exporta para los demás servicios ---
+    EventosTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: hcm-eventos
+
+    ColaUsuariosDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ms-usuarios-eventos-dlq
+        MessageRetentionPeriod: 1209600
+
+    ColaUsuarios:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ms-usuarios-eventos
+        VisibilityTimeout: 60
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt ColaUsuariosDLQ.Arn
+          maxReceiveCount: 3
+
+    ColaUsuariosPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues: [!Ref ColaUsuarios]
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal: { Service: sns.amazonaws.com }
+              Action: sqs:SendMessage
+              Resource: !GetAtt ColaUsuarios.Arn
+              Condition:
+                ArnEquals: { "aws:SourceArn": !Ref EventosTopic }
+
+    SuscripcionUsuarios:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: !Ref EventosTopic
+        Protocol: sqs
+        Endpoint: !GetAtt ColaUsuarios.Arn
+        RawMessageDelivery: true
+        FilterPolicyScope: MessageBody
+        FilterPolicy:
+          tipo_evento: [EmpleadoCreado, EmpleadoCesado]
+
+    # Que los errores del Authorizer / API Gateway también lleven cabeceras CORS (el frontend corre en Amplify)
+    GatewayResponse4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        RestApiId: !Ref ApiGatewayRestApi
+        ResponseType: DEFAULT_4XX
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+    GatewayResponse5XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        RestApiId: !Ref ApiGatewayRestApi
+        ResponseType: DEFAULT_5XX
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+
+  Outputs:
+    AuthorizerArn:
+      Description: ARN del Authorizer compartido (usar en los demás servicios)
+      Value: !GetAtt AuthorizerLambdaFunction.Arn
+      Export: { Name: "${self:service}-${sls:stage}-AuthorizerArn" }
+    EventosTopicArn:
+      Description: ARN del topic hcm-eventos (suscribirse / publicar desde los demás servicios)
+      Value: !Ref EventosTopic
+      Export: { Name: "${self:service}-${sls:stage}-EventosTopicArn" }
