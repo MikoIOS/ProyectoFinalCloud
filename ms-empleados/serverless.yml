@@ -1,0 +1,199 @@
+service: ms-empleados
+
+frameworkVersion: ">=3"
+
+# Requisito: ms-usuarios debe estar desplegado antes (exporta el Authorizer y el topic hcm-eventos).
+custom:
+  auth:
+    arn: ${cf:ms-usuarios-${sls:stage}.AuthorizerArn}
+    type: token
+    identitySource: method.request.header.Authorization
+    resultTtlInSeconds: 300
+  topicArn: ${cf:ms-usuarios-${sls:stage}.EventosTopicArn}
+
+package:
+  patterns:
+    - "!tests/**"
+    - "!scripts/**"
+    - "!postman/**"
+    - "!node_modules/**"
+    - "!.venv/**"
+    - "!requirements-dev.txt"
+
+provider:
+  name: aws
+  runtime: python3.12
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  timeout: 15
+  iam:
+    role: ${env:LAB_ROLE_ARN}   # AWS Academy: arn:aws:iam::<cuenta>:role/LabRole
+  environment:
+    TABLE_EMPLEADOS: hcm-empleados
+    TOPIC_ARN: ${self:custom.topicArn}
+
+functions:
+  ping:
+    handler: src/handlers/ping.ping
+    events:
+      - http: { path: ping, method: get, cors: true }
+
+  crearEmpleado:
+    handler: src/handlers/empleados.crear
+    events:
+      - http: { path: empleados, method: post, cors: true, authorizer: "${self:custom.auth}" }
+
+  listarEmpleados:
+    handler: src/handlers/empleados.listar
+    events:
+      - http: { path: empleados, method: get, cors: true, authorizer: "${self:custom.auth}" }
+
+  # Rutas literales: API Gateway las prefiere sobre /empleados/{id}
+  resumen:
+    handler: src/handlers/consultas.resumen
+    timeout: 29
+    events:
+      - http: { path: empleados/resumen, method: get, cors: true, authorizer: "${self:custom.auth}" }
+
+  organigrama:
+    handler: src/handlers/consultas.organigrama
+    events:
+      - http: { path: empleados/organigrama, method: get, cors: true, authorizer: "${self:custom.auth}" }
+
+  miFicha:
+    handler: src/handlers/autoservicio.mi_ficha
+    events:
+      - http: { path: empleados/me, method: get, cors: true, authorizer: "${self:custom.auth}" }
+
+  actualizarMiContacto:
+    handler: src/handlers/autoservicio.actualizar_mi_contacto
+    events:
+      - http: { path: empleados/me, method: patch, cors: true, authorizer: "${self:custom.auth}" }
+
+  obtenerEmpleado:
+    handler: src/handlers/empleados.obtener
+    events:
+      - http: { path: "empleados/{id}", method: get, cors: true, authorizer: "${self:custom.auth}" }
+
+  actualizarEmpleado:
+    handler: src/handlers/empleados.actualizar
+    events:
+      - http: { path: "empleados/{id}", method: put, cors: true, authorizer: "${self:custom.auth}" }
+
+  cambiarEstado:
+    handler: src/handlers/empleados.cambiar_estado
+    events:
+      - http: { path: "empleados/{id}/estado", method: patch, cors: true, authorizer: "${self:custom.auth}" }
+
+  procesarEventos:
+    handler: src/handlers/eventos.handler
+    events:
+      - sqs:
+          arn: !GetAtt ColaEmpleados.Arn
+          batchSize: 5
+          functionResponseType: ReportBatchItemFailures
+
+resources:
+  Resources:
+    TablaEmpleados:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: hcm-empleados
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - { AttributeName: tenant_id,   AttributeType: S }
+          - { AttributeName: empleado_id, AttributeType: S }
+          - { AttributeName: area,        AttributeType: S }
+          - { AttributeName: jefe_id,     AttributeType: S }
+          - { AttributeName: estado,      AttributeType: S }
+          - { AttributeName: documento,   AttributeType: S }
+        KeySchema:
+          - { AttributeName: tenant_id,   KeyType: HASH }
+          - { AttributeName: empleado_id, KeyType: RANGE }
+        GlobalSecondaryIndexes:
+          # Las proyecciones INCLUDE guardan el listado resumido; mantener igual que scripts/tabla.py
+          - IndexName: area-index
+            KeySchema:
+              - { AttributeName: tenant_id, KeyType: HASH }
+              - { AttributeName: area,      KeyType: RANGE }
+            Projection:
+              ProjectionType: INCLUDE
+              NonKeyAttributes: [nombres, apellidos, email, cargo, jefe_id, estado, fecha_ingreso]
+          - IndexName: jefe-index
+            KeySchema:
+              - { AttributeName: tenant_id, KeyType: HASH }
+              - { AttributeName: jefe_id,   KeyType: RANGE }
+            Projection:
+              ProjectionType: INCLUDE
+              NonKeyAttributes: [nombres, apellidos, email, area, cargo, estado, fecha_ingreso]
+          - IndexName: estado-index
+            KeySchema:
+              - { AttributeName: tenant_id, KeyType: HASH }
+              - { AttributeName: estado,    KeyType: RANGE }
+            Projection:
+              ProjectionType: INCLUDE
+              NonKeyAttributes: [nombres, apellidos, email, area, cargo, jefe_id, fecha_ingreso]
+          - IndexName: documento-index
+            KeySchema:
+              - { AttributeName: tenant_id, KeyType: HASH }
+              - { AttributeName: documento, KeyType: RANGE }
+            Projection: { ProjectionType: KEYS_ONLY }
+
+    # --- Eventos: cola propia suscrita al topic hcm-eventos (creado por ms-usuarios) ---
+    ColaEmpleadosDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ms-empleados-eventos-dlq
+        MessageRetentionPeriod: 1209600
+
+    ColaEmpleados:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ms-empleados-eventos
+        VisibilityTimeout: 90
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt ColaEmpleadosDLQ.Arn
+          maxReceiveCount: 3
+
+    ColaEmpleadosPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues: [!Ref ColaEmpleados]
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal: { Service: sns.amazonaws.com }
+              Action: sqs:SendMessage
+              Resource: !GetAtt ColaEmpleados.Arn
+              Condition:
+                ArnEquals: { "aws:SourceArn": "${self:custom.topicArn}" }
+
+    SuscripcionEmpleados:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: ${self:custom.topicArn}
+        Protocol: sqs
+        Endpoint: !GetAtt ColaEmpleados.Arn
+        RawMessageDelivery: true
+        FilterPolicyScope: MessageBody
+        FilterPolicy:
+          tipo_evento: [PostulanteContratado, AusenciaAprobada, AusenciaFinalizada]
+
+    # Que los errores del Authorizer / API Gateway también lleven cabeceras CORS (el frontend corre en Amplify)
+    GatewayResponse4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        RestApiId: !Ref ApiGatewayRestApi
+        ResponseType: DEFAULT_4XX
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+    GatewayResponse5XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        RestApiId: !Ref ApiGatewayRestApi
+        ResponseType: DEFAULT_5XX
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
