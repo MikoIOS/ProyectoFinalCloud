@@ -24,6 +24,7 @@ def crear(event, context):
     item = {
         'tenant_id': tenant_id,
         'sk': f'VACANTE#{vac_id}',
+        'vacante_id': vac_id,
         'titulo': body.get('titulo', 'Sin titulo'),
         'area': body.get('area', 'General'),
         'estado': 'ABIERTA',
@@ -33,6 +34,14 @@ def crear(event, context):
     return _resp(201, {**item, 'vacante_id': vac_id})
 
 
+def _a_vacante(item):
+    item = dict(item)
+    sk = item.pop('sk', '')
+    if 'vacante_id' not in item and sk.startswith('VACANTE#'):
+        item['vacante_id'] = sk.split('#', 1)[1]
+    return item
+
+
 def listar(event, context):
     qs = event.get('queryStringParameters') or {}
     tenant_id = qs.get('tenant_id', 'andina')
@@ -40,4 +49,4 @@ def listar(event, context):
         KeyConditionExpression=Key('tenant_id').eq(tenant_id)
         & Key('sk').begins_with('VACANTE#')
     )
-    return _resp(200, r.get('Items', []))
+    return _resp(200, [_a_vacante(i) for i in r.get('Items', [])])
