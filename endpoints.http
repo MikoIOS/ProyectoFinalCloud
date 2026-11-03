@@ -1,0 +1,154 @@
+### Backend C — Endpoints de prueba
+### Compatible con la extensión REST Client de VS Code,
+### o copiable como curl.
+###
+### Reemplaza los endpoints con los que te imprime "sls deploy"
+### (son distintos en cada deploy).
+
+@API_RECL = https://k9zoy1ou55.execute-api.us-east-1.amazonaws.com
+@API_DESE = https://b5k8pbnfqa.execute-api.us-east-1.amazonaws.com
+@TENANT = andina
+
+
+### ─────────────────────────────────────────────
+### ms-reclutamiento — vacantes
+### ─────────────────────────────────────────────
+
+### Crear vacante
+POST {{API_RECL}}/vacantes
+Content-Type: application/json
+
+{
+  "tenant_id": "{{TENANT}}",
+  "titulo": "Desarrollador Backend",
+  "area": "Tecnología"
+}
+
+### Listar vacantes del tenant
+GET {{API_RECL}}/vacantes?tenant_id={{TENANT}}
+
+
+### ─────────────────────────────────────────────
+### ms-reclutamiento — postulaciones
+### ─────────────────────────────────────────────
+
+### Crear postulación (devuelve cv_upload_url, URL S3 prefirmada)
+POST {{API_RECL}}/postulaciones
+Content-Type: application/json
+
+{
+  "tenant_id": "{{TENANT}}",
+  "vacante_id": "vac-XXXXXXXX",
+  "nombre": "Luis Ramos",
+  "email": "luis.ramos@test.com"
+}
+
+### Subir CV a la URL prefirmada
+### (reemplaza <URL> por el cv_upload_url que te devolvió el POST anterior)
+# curl -X PUT -H "Content-Type: application/pdf" --data-binary @cv.pdf "<URL>"
+
+### Listar postulaciones de una vacante (vía GSI vacante-index)
+GET {{API_RECL}}/vacantes/vac-XXXXXXXX/postulaciones?tenant_id={{TENANT}}
+
+### Avanzar en el pipeline
+PATCH {{API_RECL}}/postulaciones/pos-XXXXXXXX/estado
+Content-Type: application/json
+
+{
+  "tenant_id": "{{TENANT}}",
+  "estado": "ENTREVISTA"
+}
+
+### Pipeline completo: RECIBIDO → ENTREVISTA → OFERTA → CONTRATADO
+### El estado CONTRATADO dispara el evento PostulanteContratado al SNS.
+PATCH {{API_RECL}}/postulaciones/pos-XXXXXXXX/estado
+Content-Type: application/json
+
+{
+  "tenant_id": "{{TENANT}}",
+  "estado": "CONTRATADO"
+}
+
+
+### ─────────────────────────────────────────────
+### ms-reclutamiento — onboarding
+### ─────────────────────────────────────────────
+
+### Crear tarea de onboarding
+POST {{API_RECL}}/onboarding
+Content-Type: application/json
+
+{
+  "tenant_id": "{{TENANT}}",
+  "empleado_id": "emp-000045",
+  "tarea": "Entregar laptop"
+}
+
+### Listar tareas de un empleado
+GET {{API_RECL}}/onboarding/emp-000045?tenant_id={{TENANT}}
+
+### Marcar tarea como completada
+PATCH {{API_RECL}}/onboarding/emp-000045/onb-XXXXXXXX?tenant_id={{TENANT}}
+
+
+### ─────────────────────────────────────────────
+### ms-desempeno — evaluaciones
+### ─────────────────────────────────────────────
+
+### Crear evaluación (estado inicial PENDIENTE)
+POST {{API_DESE}}/evaluaciones
+Content-Type: application/json
+
+{
+  "tenant_id": "{{TENANT}}",
+  "empleado_id": "emp-000045",
+  "evaluador_id": "emp-000010",
+  "periodo": "2026-S2",
+  "puntaje": 4.3,
+  "competencias": [
+    { "nombre": "Trabajo en equipo", "puntaje": 5 },
+    { "nombre": "Puntualidad", "puntaje": 4 }
+  ],
+  "objetivos": ["Automatizar reporte mensual"],
+  "comentarios": "Buen desempeño"
+}
+
+### Listar evaluaciones de un empleado (GSI empleado-index + filtro begins_with eva-)
+GET {{API_DESE}}/evaluaciones?tenant_id={{TENANT}}&empleado=emp-000045
+
+### Completar evaluación — dispara EvaluacionCompletada al SNS
+PUT {{API_DESE}}/evaluaciones/eva-XXXXXXXX
+Content-Type: application/json
+
+{
+  "tenant_id": "{{TENANT}}",
+  "estado": "COMPLETADA",
+  "puntaje": 4.5
+}
+
+
+### ─────────────────────────────────────────────
+### ms-desempeno — reconocimientos
+### ─────────────────────────────────────────────
+
+### Crear reconocimiento
+POST {{API_DESE}}/reconocimientos
+Content-Type: application/json
+
+{
+  "tenant_id": "{{TENANT}}",
+  "de_empleado_id": "emp-000010",
+  "para_empleado_id": "emp-000045",
+  "mensaje": "Excelente trabajo en el proyecto X"
+}
+
+
+### ─────────────────────────────────────────────
+### Multi-tenant: mismos endpoints, otro tenant
+### ─────────────────────────────────────────────
+
+### Listar vacantes de pacifico
+GET {{API_RECL}}/vacantes?tenant_id=pacifico
+
+### Listar vacantes de sierra
+GET {{API_RECL}}/vacantes?tenant_id=sierra

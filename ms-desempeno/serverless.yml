@@ -1,0 +1,70 @@
+service: ms-desempeno
+frameworkVersion: '^4.0.0'
+
+provider:
+  name: aws
+  runtime: python3.12
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  environment:
+    TABLE_NAME: hcm-desempeno-${sls:stage}
+    EVENTS_TOPIC_ARN:
+      Fn::ImportValue: hcm-eventos-topic-arn-${sls:stage}
+  iam:
+    role: arn:aws:iam::555330235657:role/LabRole
+
+functions:
+  crearEvaluacion:
+    handler: handlers/evaluaciones.crear
+    events:
+      - httpApi:
+          path: /evaluaciones
+          method: post
+  listarEvaluaciones:
+    handler: handlers/evaluaciones.listar
+    events:
+      - httpApi:
+          path: /evaluaciones
+          method: get
+  actualizarEvaluacion:
+    handler: handlers/evaluaciones.actualizar
+    events:
+      - httpApi:
+          path: /evaluaciones/{evaluacion_id}
+          method: put
+
+  crearReconocimiento:
+    handler: handlers/reconocimientos.crear
+    events:
+      - httpApi:
+          path: /reconocimientos
+          method: post
+
+resources:
+  Resources:
+    DesempenoTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: hcm-desempeno-${sls:stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+          - AttributeName: empleado_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: empleado-index
+            KeySchema:
+              - AttributeName: tenant_id
+                KeyType: HASH
+              - AttributeName: empleado_id
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL

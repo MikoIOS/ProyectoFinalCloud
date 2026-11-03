@@ -1,0 +1,115 @@
+service: ms-reclutamiento
+frameworkVersion: '^4.0.0'
+
+provider:
+  name: aws
+  runtime: python3.12
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  environment:
+    TABLE_NAME: hcm-reclutamiento-${sls:stage}
+    CV_BUCKET: hcm-cvs-${sls:stage}-${aws:accountId}
+    EVENTS_TOPIC_ARN:
+      Ref: HcmEventosTopic
+  iam:
+    role: arn:aws:iam::555330235657:role/LabRole
+
+functions:
+  crearVacante:
+    handler: handlers/vacantes.crear
+    events:
+      - httpApi:
+          path: /vacantes
+          method: post
+  listarVacantes:
+    handler: handlers/vacantes.listar
+    events:
+      - httpApi:
+          path: /vacantes
+          method: get
+
+  crearPostulacion:
+    handler: handlers/postulaciones.crear
+    events:
+      - httpApi:
+          path: /postulaciones
+          method: post
+  listarPostulaciones:
+    handler: handlers/postulaciones.listar
+    events:
+      - httpApi:
+          path: /vacantes/{vacante_id}/postulaciones
+          method: get
+  actualizarEstadoPostulacion:
+    handler: handlers/postulaciones.actualizar_estado
+    events:
+      - httpApi:
+          path: /postulaciones/{postulacion_id}/estado
+          method: patch
+
+  crearTareaOnboarding:
+    handler: handlers/onboarding.crear
+    events:
+      - httpApi:
+          path: /onboarding
+          method: post
+  listarOnboardingEmpleado:
+    handler: handlers/onboarding.listar
+    events:
+      - httpApi:
+          path: /onboarding/{empleado_id}
+          method: get
+  completarTareaOnboarding:
+    handler: handlers/onboarding.completar
+    events:
+      - httpApi:
+          path: /onboarding/{empleado_id}/{onboarding_id}
+          method: patch
+
+resources:
+  Resources:
+    ReclutamientoTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: hcm-reclutamiento-${sls:stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+          - AttributeName: vacante_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: vacante-index
+            KeySchema:
+              - AttributeName: tenant_id
+                KeyType: HASH
+              - AttributeName: vacante_id
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+    CVBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: hcm-cvs-${sls:stage}-${aws:accountId}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedMethods: [GET, PUT, POST]
+              AllowedOrigins: ['*']
+              AllowedHeaders: ['*']
+    HcmEventosTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: hcm-eventos-${sls:stage}
+  Outputs:
+    HcmEventosTopicArn:
+      Value:
+        Ref: HcmEventosTopic
+      Export:
+        Name: hcm-eventos-topic-arn-${sls:stage}
