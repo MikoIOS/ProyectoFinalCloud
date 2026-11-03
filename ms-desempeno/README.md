@@ -37,7 +37,7 @@ sls deploy --stage dev
 | PUT | `/evaluaciones/{evaluacion_id}` |
 | POST | `/reconocimientos` |
 
-Ejemplos en `../endpoints.http`.
+Ejemplos en [`../api/endpoints.http`](../api/endpoints.http).
 
 ## Estructura
 

@@ -2,6 +2,8 @@
 
 Cómo levantar `ms-reclutamiento` + `ms-desempeno` en una cuenta AWS Learner Lab distinta a la del dueño original.
 
+> **Ejecuta todos los comandos desde la raíz del repositorio** (`ProyectoFinalCloud/`), no desde esta carpeta `docs/`.
+
 ## Prerequisitos
 
 En tu máquina (Mac/Linux):
@@ -74,9 +76,9 @@ Si falla con `iam:CreateRole`, es porque el serverless.yml está intentando crea
 ## Actualizar documentación con los nuevos URLs
 
 Los URLs cambiarán porque son nuevos para tu cuenta. Actualiza:
-- `backend-c.postman_collection.json`
-- `openapi.yaml`
-- `swagger.html`
+- `postman/backend-c.postman_collection.json`
+- `api/openapi.yaml`
+- `api/swagger.html`
 
 ```bash
 # Desde la raíz del repo. Reemplaza por los URLs reales que te imprimió sls deploy.
@@ -85,8 +87,8 @@ URL_RECL_NUEVA="<tu URL de ms-reclutamiento>"
 URL_DESE_VIEJA="b5k8pbnfqa.execute-api.us-east-1.amazonaws.com"
 URL_DESE_NUEVA="<tu URL de ms-desempeno>"
 
-sed -i '' "s|$URL_RECL_VIEJA|$URL_RECL_NUEVA|g" swagger.html openapi.yaml backend-c.postman_collection.json
-sed -i '' "s|$URL_DESE_VIEJA|$URL_DESE_NUEVA|g" swagger.html openapi.yaml backend-c.postman_collection.json
+sed -i '' "s|$URL_RECL_VIEJA|$URL_RECL_NUEVA|g" api/swagger.html api/openapi.yaml postman/backend-c.postman_collection.json
+sed -i '' "s|$URL_DESE_VIEJA|$URL_DESE_NUEVA|g" api/swagger.html api/openapi.yaml postman/backend-c.postman_collection.json
 ```
 
 ---
@@ -115,7 +117,7 @@ aws sns subscribe --topic-arn $TOPIC --protocol email --notification-endpoint tu
 # Confirma el email que te llega
 ```
 
-Importa `backend-c.postman_collection.json` en Postman y corre los requests en orden. El request **"7. Pipeline → CONTRATADO"** y el **"3. Completar evaluación"** disparan los eventos SNS que llegarán al email suscrito.
+Importa `postman/backend-c.postman_collection.json` en Postman y corre los requests en orden. El request **"7. Pipeline → CONTRATADO"** y el **"3. Completar evaluación"** disparan los eventos SNS que llegarán al email suscrito.
 
 ---
 

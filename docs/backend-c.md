@@ -141,7 +141,7 @@ Single-table con PK `tenant_id` + SK `sk`:
 
 **Estados de evaluación:** `PENDIENTE → EN_PROGRESO → COMPLETADA`
 
-Ver `endpoints.http` para ejemplos listos de curl / request.
+Ver [`api/endpoints.http`](../api/endpoints.http) para ejemplos listos de curl / request.
 
 ---
 

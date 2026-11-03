@@ -42,7 +42,7 @@ El deploy crea el topic SNS compartido que los dem√°s microservicios importan v√
 | GET | `/onboarding/{empleado_id}?tenant_id=X` |
 | PATCH | `/onboarding/{empleado_id}/{onboarding_id}?tenant_id=X` |
 
-Ejemplos de llamadas en `../endpoints.http`.
+Ejemplos de llamadas en [`../api/endpoints.http`](../api/endpoints.http).
 
 ## Estructura
 
