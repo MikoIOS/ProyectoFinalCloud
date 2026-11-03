@@ -1,0 +1,94 @@
+{
+  "info": {
+    "_postman_id": "c0f5b0a2-1f3e-4a7b-9c1d-2e3f4a5b6c7d",
+    "name": "ms-notificaciones-dev",
+    "description": "Notificaciones del HCM. Requiere token del Lambda Authorizer (ms-usuarios). El tenant y el usuario salen del token; nunca del body.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://3wfj6ozaga.execute-api.us-east-1.amazonaws.com/dev" },
+    { "key": "token", "value": "" },
+    { "key": "notificacion_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Salud",
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/ping", "host": ["{{baseUrl}}"], "path": ["ping"] }
+      }
+    },
+    {
+      "name": "Listar notificaciones",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/notificaciones?limit=20",
+          "host": ["{{baseUrl}}"],
+          "path": ["notificaciones"],
+          "query": [{ "key": "limit", "value": "20" }]
+        }
+      }
+    },
+    {
+      "name": "Listar no leídas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/notificaciones?leida=false",
+          "host": ["{{baseUrl}}"],
+          "path": ["notificaciones"],
+          "query": [{ "key": "leida", "value": "false" }]
+        }
+      }
+    },
+    {
+      "name": "Listar por tipo",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/notificaciones?tipo=EmpleadoCreado",
+          "host": ["{{baseUrl}}"],
+          "path": ["notificaciones"],
+          "query": [{ "key": "tipo", "value": "EmpleadoCreado" }]
+        }
+      }
+    },
+    {
+      "name": "Listar con paginación",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/notificaciones?limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["notificaciones"],
+          "query": [{ "key": "limit", "value": "10" }]
+        }
+      }
+    },
+    {
+      "name": "Marcar como leída",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/notificaciones/{{notificacion_id}}/leida",
+          "host": ["{{baseUrl}}"],
+          "path": ["notificaciones", "{{notificacion_id}}", "leida"]
+        }
+      }
+    }
+  ]
+}

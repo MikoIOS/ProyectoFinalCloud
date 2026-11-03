@@ -8,8 +8,8 @@ provider:
   stage: ${opt:stage, 'dev'}
   environment:
     TABLE_NAME: hcm-desempeno-${sls:stage}
-    EVENTS_TOPIC_ARN:
-      Fn::ImportValue: hcm-eventos-topic-arn-${sls:stage}
+    # Topic único hcm-eventos (creado y exportado por ms-usuarios)
+    EVENTS_TOPIC_ARN: ${cf:ms-usuarios-${sls:stage}.EventosTopicArn}
   iam:
     role: arn:aws:iam::851725431647:role/LabRole
 

@@ -1,0 +1,160 @@
+service: ms-notificaciones
+
+frameworkVersion: "4"
+
+# Requisito: ms-usuarios desplegado antes (exporta el Authorizer y el topic hcm-eventos).
+custom:
+  auth:
+    arn: ${cf:ms-usuarios-${sls:stage}.AuthorizerArn}
+    type: token
+    identitySource: method.request.header.Authorization
+    resultTtlInSeconds: 300
+  topicArn: ${cf:ms-usuarios-${sls:stage}.EventosTopicArn}
+
+package:
+  patterns:
+    - "!tests/**"
+    - "!scripts/**"
+    - "!postman/**"
+    - "!node_modules/**"
+    - "!package-lock.json"
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  timeout: 10
+  iam:
+    role: ${env:LAB_ROLE_ARN}   # AWS Academy: arn:aws:iam::<cuenta>:role/LabRole
+  environment:
+    TABLE_NAME: hcm-notificaciones-${sls:stage}
+    EMAIL_TOPIC_ARN: !Ref EmailTopic
+
+functions:
+  ping:
+    handler: src/handlers/http.ping
+    events:
+      - http: { path: ping, method: get, cors: true }
+
+  listarNotificaciones:
+    handler: src/handlers/http.listar
+    events:
+      - http: { path: notificaciones, method: get, cors: true, authorizer: "${self:custom.auth}" }
+
+  marcarLeida:
+    handler: src/handlers/http.marcarLeida
+    events:
+      - http: { path: "notificaciones/{id}/leida", method: patch, cors: true, authorizer: "${self:custom.auth}" }
+
+  procesarEventos:
+    handler: src/handlers/eventos.handler
+    events:
+      - sqs:
+          arn: !GetAtt ColaNotificaciones.Arn
+          batchSize: 5
+          functionResponseType: ReportBatchItemFailures
+
+resources:
+  Resources:
+    TablaNotificaciones:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: hcm-notificaciones-${sls:stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - { AttributeName: tenant_id,       AttributeType: S }
+          - { AttributeName: notificacion_id, AttributeType: S }
+          - { AttributeName: destinatario_id, AttributeType: S }
+        KeySchema:
+          - { AttributeName: tenant_id,       KeyType: HASH }
+          - { AttributeName: notificacion_id, KeyType: RANGE }
+        GlobalSecondaryIndexes:
+          - IndexName: destinatario-index
+            KeySchema:
+              - { AttributeName: tenant_id,       KeyType: HASH }
+              - { AttributeName: destinatario_id, KeyType: RANGE }
+            Projection: { ProjectionType: ALL }
+
+    # Topic propio solo para avisos por email. Para recibir correos, añade una
+    # suscripción de protocolo "email" con una dirección verificada en SNS.
+    EmailTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: hcm-notificaciones-email-${sls:stage}
+
+    # --- Eventos: cola propia suscrita al topic hcm-eventos (creado por ms-usuarios) ---
+    ColaNotificacionesDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ms-notificaciones-eventos-dlq
+        MessageRetentionPeriod: 1209600
+
+    ColaNotificaciones:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ms-notificaciones-eventos
+        VisibilityTimeout: 60
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt ColaNotificacionesDLQ.Arn
+          maxReceiveCount: 3
+
+    ColaNotificacionesPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues: [!Ref ColaNotificaciones]
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal: { Service: sns.amazonaws.com }
+              Action: sqs:SendMessage
+              Resource: !GetAtt ColaNotificaciones.Arn
+              Condition:
+                ArnEquals: { "aws:SourceArn": "${self:custom.topicArn}" }
+
+    SuscripcionNotificaciones:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: ${self:custom.topicArn}
+        Protocol: sqs
+        Endpoint: !GetAtt ColaNotificaciones.Arn
+        RawMessageDelivery: true
+        FilterPolicyScope: MessageBody
+        FilterPolicy:
+          tipo_evento:
+            - EmpleadoCreado
+            - EmpleadoCesado
+            - PostulanteContratado
+            - AusenciaSolicitada
+            - AusenciaAprobada
+            - AusenciaFinalizada
+            - NominaGenerada
+            - EvaluacionCompletada
+
+    # Que los errores del Authorizer / API Gateway también lleven cabeceras CORS
+    GatewayResponse4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        RestApiId: !Ref ApiGatewayRestApi
+        ResponseType: DEFAULT_4XX
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+    GatewayResponse5XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        RestApiId: !Ref ApiGatewayRestApi
+        ResponseType: DEFAULT_5XX
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+
+  Outputs:
+    EmailTopicArn:
+      Description: Topic SNS para avisos por email
+      Value: !Ref EmailTopic
+      Export: { Name: "${self:service}-${sls:stage}-EmailTopicArn" }
+    ColaEventosArn:
+      Description: Cola SQS que consume los eventos de notificaciones
+      Value: !GetAtt ColaNotificaciones.Arn

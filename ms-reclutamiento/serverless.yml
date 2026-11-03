@@ -9,8 +9,8 @@ provider:
   environment:
     TABLE_NAME: hcm-reclutamiento-${sls:stage}
     CV_BUCKET: hcm-cvs-${sls:stage}-${aws:accountId}
-    EVENTS_TOPIC_ARN:
-      Ref: HcmEventosTopic
+    # Topic único hcm-eventos (creado y exportado por ms-usuarios)
+    EVENTS_TOPIC_ARN: ${cf:ms-usuarios-${sls:stage}.EventosTopicArn}
   iam:
     role: arn:aws:iam::851725431647:role/LabRole
 
@@ -103,13 +103,3 @@ resources:
             - AllowedMethods: [GET, PUT, POST]
               AllowedOrigins: ['*']
               AllowedHeaders: ['*']
-    HcmEventosTopic:
-      Type: AWS::SNS::Topic
-      Properties:
-        TopicName: hcm-eventos-${sls:stage}
-  Outputs:
-    HcmEventosTopicArn:
-      Value:
-        Ref: HcmEventosTopic
-      Export:
-        Name: hcm-eventos-topic-arn-${sls:stage}
