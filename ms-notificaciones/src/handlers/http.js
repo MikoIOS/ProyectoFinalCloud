@@ -34,7 +34,8 @@ exports.listar = async (event) => {
     limit: Number.isNaN(limit) ? 50 : limit,
   });
 
-  return json(200, { items, total: items.length });
+  const no_leidas = items.filter((i) => !i.leida).length;
+  return json(200, { items, total: items.length, no_leidas });
 };
 
 exports.marcarLeida = async (event) => {

@@ -6,16 +6,24 @@ const { sns } = require('../lib/sns');
 
 async function _avisarPorEmail({ tenant_id, tipo, destinatario_id, mensaje, email }) {
   if (!process.env.EMAIL_TOPIC_ARN) return;
+  const texto = [
+    `=== NOTIFICACIÓN HCM [${tenant_id.toUpperCase()}] ===`,
+    `Evento:       ${tipo}`,
+    `Destinatario: ${destinatario_id}`,
+    email ? `Correo:       ${email}` : null,
+    `Fecha:        ${new Date().toISOString()}`,
+    ``,
+    `Mensaje:`,
+    `${mensaje}`,
+    ``,
+    `----------------------------------------------------`,
+    `SaaS HCM — Notificación del Sistema Cloud`,
+  ].filter(Boolean).join('\n');
+
   await sns.send(new PublishCommand({
     TopicArn: process.env.EMAIL_TOPIC_ARN,
     Subject: `[HCM/${tenant_id}] ${tipo}`.slice(0, 99),
-    Message: JSON.stringify({
-      tipo_evento: tipo,
-      tenant_id,
-      destinatario_id,
-      mensaje,
-      email: email || null,
-    }, null, 2),
+    Message: texto,
     MessageAttributes: {
       tipo_evento: { DataType: 'String', StringValue: tipo },
       tenant_id: { DataType: 'String', StringValue: tenant_id },
