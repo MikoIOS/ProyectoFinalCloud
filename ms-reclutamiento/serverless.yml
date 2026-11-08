@@ -14,57 +14,48 @@ provider:
   iam:
     role: arn:aws:iam::851725431647:role/LabRole
 
+custom:
+  auth:
+    arn: ${cf:ms-usuarios-${sls:stage}.AuthorizerArn}
+    type: token
+    identitySource: method.request.header.Authorization
+    resultTtlInSeconds: 300
+
 functions:
   crearVacante:
     handler: handlers/vacantes.crear
     events:
-      - httpApi:
-          path: /vacantes
-          method: post
+      - http: { path: vacantes, method: post, cors: true, authorizer: "${self:custom.auth}" }
   listarVacantes:
     handler: handlers/vacantes.listar
     events:
-      - httpApi:
-          path: /vacantes
-          method: get
+      - http: { path: vacantes, method: get, cors: true, authorizer: "${self:custom.auth}" }
 
   crearPostulacion:
     handler: handlers/postulaciones.crear
     events:
-      - httpApi:
-          path: /postulaciones
-          method: post
+      - http: { path: postulaciones, method: post, cors: true, authorizer: "${self:custom.auth}" }
   listarPostulaciones:
     handler: handlers/postulaciones.listar
     events:
-      - httpApi:
-          path: /vacantes/{vacante_id}/postulaciones
-          method: get
+      - http: { path: "vacantes/{vacante_id}/postulaciones", method: get, cors: true, authorizer: "${self:custom.auth}" }
   actualizarEstadoPostulacion:
     handler: handlers/postulaciones.actualizar_estado
     events:
-      - httpApi:
-          path: /postulaciones/{postulacion_id}/estado
-          method: patch
+      - http: { path: "postulaciones/{postulacion_id}/estado", method: patch, cors: true, authorizer: "${self:custom.auth}" }
 
   crearTareaOnboarding:
     handler: handlers/onboarding.crear
     events:
-      - httpApi:
-          path: /onboarding
-          method: post
+      - http: { path: onboarding, method: post, cors: true, authorizer: "${self:custom.auth}" }
   listarOnboardingEmpleado:
     handler: handlers/onboarding.listar
     events:
-      - httpApi:
-          path: /onboarding/{empleado_id}
-          method: get
+      - http: { path: "onboarding/{empleado_id}", method: get, cors: true, authorizer: "${self:custom.auth}" }
   completarTareaOnboarding:
     handler: handlers/onboarding.completar
     events:
-      - httpApi:
-          path: /onboarding/{empleado_id}/{onboarding_id}
-          method: patch
+      - http: { path: "onboarding/{empleado_id}/{onboarding_id}", method: patch, cors: true, authorizer: "${self:custom.auth}" }
 
 resources:
   Resources:
@@ -103,3 +94,21 @@ resources:
             - AllowedMethods: [GET, PUT, POST]
               AllowedOrigins: ['*']
               AllowedHeaders: ['*']
+
+    # CORS también en los errores del Authorizer/API Gateway (frontend en Amplify)
+    GatewayResponse4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        RestApiId: !Ref ApiGatewayRestApi
+        ResponseType: DEFAULT_4XX
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+    GatewayResponse5XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        RestApiId: !Ref ApiGatewayRestApi
+        ResponseType: DEFAULT_5XX
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"

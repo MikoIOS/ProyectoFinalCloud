@@ -13,32 +13,31 @@ provider:
   iam:
     role: arn:aws:iam::851725431647:role/LabRole
 
+custom:
+  auth:
+    arn: ${cf:ms-usuarios-${sls:stage}.AuthorizerArn}
+    type: token
+    identitySource: method.request.header.Authorization
+    resultTtlInSeconds: 300
+
 functions:
   crearEvaluacion:
     handler: handlers/evaluaciones.crear
     events:
-      - httpApi:
-          path: /evaluaciones
-          method: post
+      - http: { path: evaluaciones, method: post, cors: true, authorizer: "${self:custom.auth}" }
   listarEvaluaciones:
     handler: handlers/evaluaciones.listar
     events:
-      - httpApi:
-          path: /evaluaciones
-          method: get
+      - http: { path: evaluaciones, method: get, cors: true, authorizer: "${self:custom.auth}" }
   actualizarEvaluacion:
     handler: handlers/evaluaciones.actualizar
     events:
-      - httpApi:
-          path: /evaluaciones/{evaluacion_id}
-          method: put
+      - http: { path: "evaluaciones/{evaluacion_id}", method: put, cors: true, authorizer: "${self:custom.auth}" }
 
   crearReconocimiento:
     handler: handlers/reconocimientos.crear
     events:
-      - httpApi:
-          path: /reconocimientos
-          method: post
+      - http: { path: reconocimientos, method: post, cors: true, authorizer: "${self:custom.auth}" }
 
 resources:
   Resources:
@@ -68,3 +67,21 @@ resources:
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL
+
+    # CORS también en los errores del Authorizer/API Gateway (frontend en Amplify)
+    GatewayResponse4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        RestApiId: !Ref ApiGatewayRestApi
+        ResponseType: DEFAULT_4XX
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+    GatewayResponse5XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        RestApiId: !Ref ApiGatewayRestApi
+        ResponseType: DEFAULT_5XX
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"

@@ -7,6 +7,8 @@ from decimal import Decimal, InvalidOperation
 import boto3
 from boto3.dynamodb.conditions import Key
 
+from common.auth import contexto
+
 dynamodb = boto3.resource('dynamodb')
 s3 = boto3.client('s3')
 sns = boto3.client('sns')
@@ -119,8 +121,11 @@ def _publicar_evento(tipo, tenant_id, datos):
 
 
 def crear(event, context):
+    ctx = contexto(event)
+    if not ctx:
+        return _resp(401, {'error': 'No autenticado'})
     body = json.loads(event.get('body') or '{}')
-    tenant_id = body.get('tenant_id', 'andina')
+    tenant_id = ctx.tenant_id
     vacante_id = body.get('vacante_id')
     if not vacante_id:
         return _resp(400, {'error': 'vacante_id requerido'})
@@ -155,9 +160,11 @@ def crear(event, context):
 
 
 def listar(event, context):
+    ctx = contexto(event)
+    if not ctx:
+        return _resp(401, {'error': 'No autenticado'})
     vacante_id = event['pathParameters']['vacante_id']
-    qs = event.get('queryStringParameters') or {}
-    tenant_id = qs.get('tenant_id', 'andina')
+    tenant_id = ctx.tenant_id
     r = table.query(
         IndexName='vacante-index',
         KeyConditionExpression=Key('tenant_id').eq(tenant_id) & Key('vacante_id').eq(vacante_id)
@@ -166,9 +173,12 @@ def listar(event, context):
 
 
 def actualizar_estado(event, context):
+    ctx = contexto(event)
+    if not ctx:
+        return _resp(401, {'error': 'No autenticado'})
     post_id = event['pathParameters']['postulacion_id']
     body = json.loads(event.get('body') or '{}')
-    tenant_id = body.get('tenant_id', 'andina')
+    tenant_id = ctx.tenant_id
     nuevo_estado = body.get('estado')
 
     if nuevo_estado not in ESTADOS_VALIDOS:

@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 import boto3
 from boto3.dynamodb.conditions import Key
 
+from common.auth import contexto
+
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['TABLE_NAME'])
 
@@ -18,8 +20,11 @@ def _resp(status, body):
 
 
 def crear(event, context):
+    ctx = contexto(event)
+    if not ctx:
+        return _resp(401, {'error': 'No autenticado'})
     body = json.loads(event.get('body') or '{}')
-    tenant_id = body.get('tenant_id', 'andina')
+    tenant_id = ctx.tenant_id
     vac_id = f"vac-{uuid.uuid4().hex[:8]}"
     item = {
         'tenant_id': tenant_id,
@@ -43,8 +48,10 @@ def _a_vacante(item):
 
 
 def listar(event, context):
-    qs = event.get('queryStringParameters') or {}
-    tenant_id = qs.get('tenant_id', 'andina')
+    ctx = contexto(event)
+    if not ctx:
+        return _resp(401, {'error': 'No autenticado'})
+    tenant_id = ctx.tenant_id
     r = table.query(
         KeyConditionExpression=Key('tenant_id').eq(tenant_id)
         & Key('sk').begins_with('VACANTE#')

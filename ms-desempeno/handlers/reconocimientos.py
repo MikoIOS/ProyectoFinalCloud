@@ -4,6 +4,8 @@ import uuid
 from datetime import datetime, timezone
 import boto3
 
+from common.auth import contexto
+
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['TABLE_NAME'])
 
@@ -17,8 +19,11 @@ def _resp(status, body):
 
 
 def crear(event, context):
+    ctx = contexto(event)
+    if not ctx:
+        return _resp(401, {'error': 'No autenticado'})
     body = json.loads(event.get('body') or '{}')
-    tenant_id = body.get('tenant_id', 'andina')
+    tenant_id = ctx.tenant_id
     de_empleado = body.get('de_empleado_id')
     para_empleado = body.get('para_empleado_id')
     mensaje = body.get('mensaje')

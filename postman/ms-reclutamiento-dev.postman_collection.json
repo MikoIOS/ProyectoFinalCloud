@@ -2,12 +2,12 @@
   "info": {
     "name": "ms-reclutamiento · HCM API (dev)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Reclutamiento: vacantes, postulaciones (CV a S3) y onboarding. Sin auth (API pública dev)."
+    "description": "Reclutamiento: vacantes, postulaciones (CV a S3) y onboarding. Requiere Bearer token (Authorizer compartido): ejecuta '00 Auth > Login admin andina' para setear {{token}}. El tenant sale del JWT; no enviar tenant_id."
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "https://p7gxsnkpj9.execute-api.us-east-1.amazonaws.com"
+      "value": "https://ts3pqiwi7e.execute-api.us-east-1.amazonaws.com/dev"
     },
     {
       "key": "vacante_id",
@@ -24,9 +24,81 @@
     {
       "key": "onboarding_id",
       "value": ""
+    },
+    {
+      "key": "login_url",
+      "value": "https://ckuqmvszfj.execute-api.us-east-1.amazonaws.com/dev"
+    },
+    {
+      "key": "tenant_id",
+      "value": "andina"
+    },
+    {
+      "key": "email",
+      "value": "admin@andina.pe"
+    },
+    {
+      "key": "password",
+      "value": "Demo1234!"
+    },
+    {
+      "key": "token",
+      "value": ""
     }
   ],
   "item": [
+    {
+      "name": "00 Auth",
+      "item": [
+        {
+          "name": "Login admin andina (set token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{login_url}}/auth/login",
+              "host": [
+                "{{login_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json();",
+                  "if(j.token){pm.collectionVariables.set('token',j.token);}",
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
     {
       "name": "01 Vacantes",
       "item": [
@@ -51,7 +123,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"titulo\": \"Backend Developer\",\n  \"area\": \"Tecnología\",\n  \"descripcion\": \"Python/AWS\"\n}",
+              "raw": "{\n  \"titulo\": \"Backend Developer\",\n  \"area\": \"Tecnología\",\n  \"descripcion\": \"Python/AWS\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -83,18 +155,12 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/vacantes?tenant_id=andina",
+              "raw": "{{base_url}}/vacantes",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "vacantes"
-              ],
-              "query": [
-                {
-                  "key": "tenant_id",
-                  "value": "andina"
-                }
               ]
             }
           },
@@ -136,7 +202,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"vacante_id\": \"{{vacante_id}}\",\n  \"nombre\": \"Ana Torres\",\n  \"email\": \"ana.torres@mail.com\"\n}",
+              "raw": "{\n  \"vacante_id\": \"{{vacante_id}}\",\n  \"nombre\": \"Ana Torres\",\n  \"email\": \"ana.torres@mail.com\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -168,7 +234,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/vacantes/{{vacante_id}}/postulaciones?tenant_id=andina",
+              "raw": "{{base_url}}/vacantes/{{vacante_id}}/postulaciones",
               "host": [
                 "{{base_url}}"
               ],
@@ -176,12 +242,6 @@
                 "vacantes",
                 "{{vacante_id}}",
                 "postulaciones"
-              ],
-              "query": [
-                {
-                  "key": "tenant_id",
-                  "value": "andina"
-                }
               ]
             }
           }
@@ -209,7 +269,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"estado\": \"CONTRATADO\"\n}",
+              "raw": "{\n  \"estado\": \"CONTRATADO\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -255,7 +315,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"empleado_id\": \"{{empleado_id}}\",\n  \"tarea\": \"Firmar contrato\"\n}",
+              "raw": "{\n  \"empleado_id\": \"{{empleado_id}}\",\n  \"tarea\": \"Firmar contrato\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -286,19 +346,13 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/onboarding/{{empleado_id}}?tenant_id=andina",
+              "raw": "{{base_url}}/onboarding/{{empleado_id}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "onboarding",
                 "{{empleado_id}}"
-              ],
-              "query": [
-                {
-                  "key": "tenant_id",
-                  "value": "andina"
-                }
               ]
             }
           }
@@ -314,7 +368,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/onboarding/{{empleado_id}}/{{onboarding_id}}?tenant_id=andina",
+              "raw": "{{base_url}}/onboarding/{{empleado_id}}/{{onboarding_id}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -322,12 +376,6 @@
                 "onboarding",
                 "{{empleado_id}}",
                 "{{onboarding_id}}"
-              ],
-              "query": [
-                {
-                  "key": "tenant_id",
-                  "value": "andina"
-                }
               ]
             }
           },
@@ -345,5 +393,15 @@
         }
       ]
     }
-  ]
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
 }

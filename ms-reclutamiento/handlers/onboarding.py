@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 import boto3
 from boto3.dynamodb.conditions import Key
 
+from common.auth import contexto
+
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['TABLE_NAME'])
 
@@ -18,8 +20,11 @@ def _resp(status, body):
 
 
 def crear(event, context):
+    ctx = contexto(event)
+    if not ctx:
+        return _resp(401, {'error': 'No autenticado'})
     body = json.loads(event.get('body') or '{}')
-    tenant_id = body.get('tenant_id', 'andina')
+    tenant_id = ctx.tenant_id
     empleado_id = body.get('empleado_id')
     tarea = body.get('tarea')
     if not empleado_id or not tarea:
@@ -40,9 +45,11 @@ def crear(event, context):
 
 
 def listar(event, context):
+    ctx = contexto(event)
+    if not ctx:
+        return _resp(401, {'error': 'No autenticado'})
     empleado_id = event['pathParameters']['empleado_id']
-    qs = event.get('queryStringParameters') or {}
-    tenant_id = qs.get('tenant_id', 'andina')
+    tenant_id = ctx.tenant_id
     r = table.query(
         KeyConditionExpression=Key('tenant_id').eq(tenant_id)
         & Key('sk').begins_with(f'ONBOARDING#{empleado_id}#')
@@ -51,10 +58,12 @@ def listar(event, context):
 
 
 def completar(event, context):
+    ctx = contexto(event)
+    if not ctx:
+        return _resp(401, {'error': 'No autenticado'})
     empleado_id = event['pathParameters']['empleado_id']
     onb_id = event['pathParameters']['onboarding_id']
-    qs = event.get('queryStringParameters') or {}
-    tenant_id = qs.get('tenant_id', 'andina')
+    tenant_id = ctx.tenant_id
 
     r = table.update_item(
         Key={'tenant_id': tenant_id, 'sk': f'ONBOARDING#{empleado_id}#{onb_id}'},

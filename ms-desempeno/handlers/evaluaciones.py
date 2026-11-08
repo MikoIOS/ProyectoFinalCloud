@@ -6,6 +6,8 @@ from decimal import Decimal
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 
+from common.auth import contexto
+
 dynamodb = boto3.resource('dynamodb')
 sns = boto3.client('sns')
 table = dynamodb.Table(os.environ['TABLE_NAME'])
@@ -77,8 +79,11 @@ def _publicar_evento(tipo, tenant_id, datos):
 
 
 def crear(event, context):
+    ctx = contexto(event)
+    if not ctx:
+        return _resp(401, {'error': 'No autenticado'})
     body = json.loads(event.get('body') or '{}', parse_float=Decimal)
-    tenant_id = body.get('tenant_id', 'andina')
+    tenant_id = ctx.tenant_id
     empleado_id = body.get('empleado_id')
     if not empleado_id:
         return _resp(400, {'error': 'empleado_id requerido'})
@@ -103,8 +108,11 @@ def crear(event, context):
 
 
 def listar(event, context):
+    ctx = contexto(event)
+    if not ctx:
+        return _resp(401, {'error': 'No autenticado'})
     qs = event.get('queryStringParameters') or {}
-    tenant_id = qs.get('tenant_id', 'andina')
+    tenant_id = ctx.tenant_id
     empleado_id = qs.get('empleado')
     if not empleado_id:
         return _resp(400, {'error': 'query param "empleado" requerido'})
@@ -118,9 +126,12 @@ def listar(event, context):
 
 
 def actualizar(event, context):
+    ctx = contexto(event)
+    if not ctx:
+        return _resp(401, {'error': 'No autenticado'})
     eva_id = event['pathParameters']['evaluacion_id']
     body = json.loads(event.get('body') or '{}', parse_float=Decimal)
-    tenant_id = body.get('tenant_id', 'andina')
+    tenant_id = ctx.tenant_id
 
     campos_actualizables = ['puntaje', 'competencias', 'objetivos', 'comentarios', 'estado']
     sets = []

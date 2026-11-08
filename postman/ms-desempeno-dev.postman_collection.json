@@ -2,12 +2,12 @@
   "info": {
     "name": "ms-desempeno · HCM API (dev)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Desempeño: evaluaciones (crear/listar/actualizar) y reconocimientos. Sin auth (API pública dev)."
+    "description": "Desempeño: evaluaciones (crear/listar/actualizar) y reconocimientos. Requiere Bearer token (Authorizer compartido): ejecuta '00 Auth > Login admin andina' para setear {{token}}. El tenant sale del JWT; no enviar tenant_id."
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "https://5cznb1nbhg.execute-api.us-east-1.amazonaws.com"
+      "value": "https://4gchww17uh.execute-api.us-east-1.amazonaws.com/dev"
     },
     {
       "key": "evaluacion_id",
@@ -20,9 +20,81 @@
     {
       "key": "evaluador_id",
       "value": "emp-000001"
+    },
+    {
+      "key": "login_url",
+      "value": "https://ckuqmvszfj.execute-api.us-east-1.amazonaws.com/dev"
+    },
+    {
+      "key": "tenant_id",
+      "value": "andina"
+    },
+    {
+      "key": "email",
+      "value": "admin@andina.pe"
+    },
+    {
+      "key": "password",
+      "value": "Demo1234!"
+    },
+    {
+      "key": "token",
+      "value": ""
     }
   ],
   "item": [
+    {
+      "name": "00 Auth",
+      "item": [
+        {
+          "name": "Login admin andina (set token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{login_url}}/auth/login",
+              "host": [
+                "{{login_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json();",
+                  "if(j.token){pm.collectionVariables.set('token',j.token);}",
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
     {
       "name": "01 Evaluaciones",
       "item": [
@@ -47,7 +119,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"empleado_id\": \"{{empleado_id}}\",\n  \"evaluador_id\": \"{{evaluador_id}}\",\n  \"periodo\": \"2026-Q4\",\n  \"puntaje\": 4.5,\n  \"competencias\": [\n    \"trabajo en equipo\",\n    \"liderazgo\"\n  ],\n  \"objetivos\": [\n    \"cerrar OKRs\"\n  ],\n  \"comentarios\": \"Buen desempeño\"\n}",
+              "raw": "{\n  \"empleado_id\": \"{{empleado_id}}\",\n  \"evaluador_id\": \"{{evaluador_id}}\",\n  \"periodo\": \"2026-Q4\",\n  \"puntaje\": 4.5,\n  \"competencias\": [\n    \"trabajo en equipo\",\n    \"liderazgo\"\n  ],\n  \"objetivos\": [\n    \"cerrar OKRs\"\n  ],\n  \"comentarios\": \"Buen desempeño\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -79,7 +151,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/evaluaciones?tenant_id=andina&empleado={{empleado_id}}",
+              "raw": "{{base_url}}/evaluaciones?empleado={{empleado_id}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -87,10 +159,6 @@
                 "evaluaciones"
               ],
               "query": [
-                {
-                  "key": "tenant_id",
-                  "value": "andina"
-                },
                 {
                   "key": "empleado",
                   "value": "{{empleado_id}}"
@@ -132,7 +200,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"puntaje\": 4.8,\n  \"estado\": \"COMPLETADA\"\n}",
+              "raw": "{\n  \"puntaje\": 4.8,\n  \"estado\": \"COMPLETADA\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -178,7 +246,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"de_empleado_id\": \"{{evaluador_id}}\",\n  \"para_empleado_id\": \"{{empleado_id}}\",\n  \"mensaje\": \"Gracias por el esfuerzo en el cierre\"\n}",
+              "raw": "{\n  \"de_empleado_id\": \"{{evaluador_id}}\",\n  \"para_empleado_id\": \"{{empleado_id}}\",\n  \"mensaje\": \"Gracias por el esfuerzo en el cierre\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -214,18 +282,12 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/evaluaciones?tenant_id=andina",
+              "raw": "{{base_url}}/evaluaciones",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "evaluaciones"
-              ],
-              "query": [
-                {
-                  "key": "tenant_id",
-                  "value": "andina"
-                }
               ]
             }
           },
@@ -262,7 +324,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tenant_id\": \"andina\"\n}",
+              "raw": "{}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -304,7 +366,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tenant_id\": \"andina\",\n  \"estado\": \"MALO\"\n}",
+              "raw": "{\n  \"estado\": \"MALO\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -326,5 +388,15 @@
         }
       ]
     }
-  ]
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
 }
