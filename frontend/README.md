@@ -25,7 +25,7 @@ El JWT permanece en memoria. Recargar la página o salir requiere iniciar sesió
 
 ## Verificación
 
-`npm test`: cinco pruebas del cliente API. `tests/browser_smoke.py`: siete comprobaciones de Chromium con APIs simuladas, incluyendo esqueletos, reintentos, validación de documento, asociación del CV, acceso sin selector de empresa, sesión y menú móvil. Requiere Python Playwright y Chromium; ejecutar con el servidor local activo. `HCM_UI_URL` permite cambiar el destino.
+`npm test`: seis pruebas del cliente API. `tests/browser_smoke.py`: ocho comprobaciones de Chromium con APIs simuladas, incluyendo esqueletos, reintentos, validación de documento, asociación del CV, acceso sin selector de empresa, sesión y menú móvil. Requiere Python Playwright y Chromium; ejecutar con el servidor local activo. `HCM_UI_URL` permite cambiar el destino.
 
 Las comprobaciones reales de AWS y Amplify están descritas en [la evidencia](../docs/frontend_verificacion.md); se distinguen de las pruebas simuladas.
 
@@ -34,3 +34,6 @@ Las comprobaciones reales de AWS y Amplify están descritas en [la evidencia](..
 App `d2d9bbvg1i7lcp`, región `us-east-1`, rama `main`. Este despliegue sube manualmente el contenido de `dist/` a Amplify Hosting usando `create_deployment`, PUT del ZIP y `start_deployment`. Los enlaces firmados de subida no se guardan en el repositorio.
 
 **Subir commits a GitHub no vuelve a desplegar automáticamente esta app.** No se vinculó un token de GitHub a AWS. El archivo raíz `amplify.yml` deja definido el build para conectar el repositorio posteriormente. Los encabezados de seguridad configurados en la app están en `customHttp.yml`.
+
+
+Las solicitudes de ausencia requieren al menos 15 días calendario de anticipación respecto de la fecha actual de Lima. Los campos de fecha muestran el mínimo permitido y la API vuelve a validar la regla, para todos los tipos y roles.

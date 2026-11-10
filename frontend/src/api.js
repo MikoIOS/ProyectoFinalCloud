@@ -40,6 +40,10 @@ export const money = (value) => new Intl.NumberFormat('es-PE', { style: 'currenc
 export const number = (value) => new Intl.NumberFormat('es-PE').format(Number(value) || 0);
 export const label = (value) => value ? String(value).replaceAll('_', ' ').toLocaleLowerCase('es').replace(/^./, c => c.toUpperCase()) : '—';
 export const month = () => new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', timeZone: 'America/Lima' }).format(new Date()).replace('/', '-');
+export function absenceMinDate(now = new Date()) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now).map(p => [p.type, p.value]));
+  return new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day) + 15)).toISOString().slice(0, 10);
+}
 export const isSupervisor = (user) => ['admin_rrhh', 'gerente'].includes(user.rol);
 export function allowedPages(user) {
   return ['inicio', ...(isSupervisor(user) ? ['empleados'] : []), 'perfil', 'nominas', 'asistencia', ...(['admin_rrhh', 'reclutador'].includes(user.rol) ? ['reclutamiento'] : []), 'desempeno', 'notificaciones'];

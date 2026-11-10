@@ -137,8 +137,8 @@ def solicitar(ctx, body):
     dias = (hasta - desde).days + 1
     if not 1 <= dias <= 90:
         raise Validacion('La ausencia debe durar entre 1 y 90 días calendario')
-    if ctx.rol != 'admin_rrhh' and desde < ahora().date() - timedelta(days=30):
-        raise Validacion('No se puede solicitar con más de 30 días de antigüedad')
+    if desde < ahora().date() + timedelta(days=15):
+        raise Validacion('La ausencia debe comenzar con al menos 15 días calendario de anticipación')
     motivo = texto(body.get('motivo'), 'motivo')
     version = repo.version(ctx.tenant_id, emp)
     items = repo.ausencias(ctx.tenant_id, emp)

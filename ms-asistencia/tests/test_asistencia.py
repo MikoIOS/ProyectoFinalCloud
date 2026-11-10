@@ -1,7 +1,7 @@
 import json
 import os
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import boto3
@@ -40,11 +40,29 @@ class AsistenciaTest(unittest.TestCase):
         self.addCleanup(clock.stop)
 
     def solicitar(self, **kw):
-        return svc.solicitar(self.emp, {'tipo': 'PERMISO', 'desde': '2026-11-10',
-            'hasta': '2026-11-11', 'motivo': 'E2E', **kw})
+        return svc.solicitar(self.emp, {'tipo': 'PERMISO', 'desde': '2026-11-24',
+            'hasta': '2026-11-25', 'motivo': 'E2E', **kw})
 
     def resolver(self, item, estado='APROBADA', ctx=None):
         return svc.resolver(ctx or self.admin, item['ausencia_id'], {'empleado_id': 'emp-2', 'estado': estado})
+
+    def test_anticipacion_obligatoria_para_todos_los_tipos_y_roles(self):
+        for ctx in (self.emp, self.admin, self.jefe):
+            for tipo in svc.TIPOS:
+                for offset in (-1, 0, 1, 14):
+                    day = (svc.ahora().date() + timedelta(days=offset)).isoformat()
+                    with self.subTest(rol=ctx.rol, tipo=tipo, dias=offset):
+                        with patch.object(repo, 'guardar_ausencia') as guardar:
+                            with self.assertRaisesRegex(Validacion, '15 días calendario'):
+                                svc.solicitar(ctx, {'tipo': tipo, 'desde': day, 'hasta': day, 'motivo': 'Prueba'})
+                            guardar.assert_not_called()
+
+    def test_limite_15_dias_y_cambio_de_dia_en_lima(self):
+        self.assertEqual(self.solicitar()['desde'], '2026-11-24')
+        with patch.object(svc, 'ahora', return_value=datetime(2026, 11, 10, 0, 0, tzinfo=svc.ZONA)):
+            with self.assertRaisesRegex(Validacion, '15 días calendario'):
+                self.solicitar()
+            self.assertEqual(self.solicitar(desde='2026-12-01', hasta='2026-12-02')['estado'], 'PENDIENTE')
 
     def test_marcaciones(self):
         b = {'empleado_id': 'emp-2', 'fecha': '2026-11-08'}
@@ -103,7 +121,7 @@ class AsistenciaTest(unittest.TestCase):
 
     def test_paginacion_aislada(self):
         self.solicitar()
-        self.solicitar(desde='2026-11-20', hasta='2026-11-21')
+        self.solicitar(desde='2026-12-04', hasta='2026-12-05')
         page = repo.listar('andina', 'AUS', {'limit': '1'}, 'emp-2')
         self.assertEqual(len(page['items']), 1)
         token = page['next_token']
@@ -120,13 +138,13 @@ class AsistenciaTest(unittest.TestCase):
         self.assertEqual(http.solicitar(event)['statusCode'], 400)
 
     def test_calendario(self):
-        a = self.resolver(self.solicitar(tipo='VACACIONES', desde='2026-11-10', hasta='2026-11-11'))
+        a = self.resolver(self.solicitar(tipo='VACACIONES', desde='2026-11-24', hasta='2026-11-25'))
         self.assertFalse(a['iniciada'])
-        with patch.object(calendario, 'ahora', return_value=datetime(2026, 11, 10, 0, 5, tzinfo=svc.ZONA)):
+        with patch.object(calendario, 'ahora', return_value=datetime(2026, 11, 24, 0, 5, tzinfo=svc.ZONA)):
             self.assertEqual(calendario.handler({})['actualizadas'], 1)
             self.assertTrue(repo.get('andina', a['sk'])['iniciada'])
             self.assertEqual(calendario.handler({})['actualizadas'], 0)
-        with patch.object(calendario, 'ahora', return_value=datetime(2026, 11, 12, 0, 5, tzinfo=svc.ZONA)):
+        with patch.object(calendario, 'ahora', return_value=datetime(2026, 11, 26, 0, 5, tzinfo=svc.ZONA)):
             calendario.handler({})
         self.assertEqual(repo.get('andina', a['sk'])['estado'], 'FINALIZADA')
 

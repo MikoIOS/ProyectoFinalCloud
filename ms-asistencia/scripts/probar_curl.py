@@ -120,12 +120,8 @@ def main():
     check('Doble aprobación', 'PATCH', ruta + '/estado', 409, cambio, admin)
     check('No finalizar anticipadamente', 'PATCH', ruta + '/estado', 409,
           {**cambio, 'estado': 'FINALIZADA'}, admin)
-    # Un permiso histórico permite comprobar FINALIZADA sin cambiar el estado laboral.
-    p = check('Permiso histórico demo', 'POST', base + '/ausencias', 201,
+    check('Ausencia histórica rechazada incluso para RRHH', 'POST', base + '/ausencias', 400,
         {**ausencia, 'tipo': 'PERMISO', 'desde': pasado, 'hasta': pasado}, admin)
-    pr = base + '/ausencias/' + p['ausencia_id'] + '/estado'
-    check('Aprobar permiso', 'PATCH', pr, 200, cambio, admin)
-    check('Finalizar permiso', 'PATCH', pr, 200, {**cambio, 'estado': 'FINALIZADA'}, admin)
 
     noti = url_coleccion('ms-notificaciones-dev.postman_collection.json', 'baseUrl')
     nomina = url_coleccion('ms-nominas-dev.postman_collection.json')
@@ -145,7 +141,7 @@ def main():
             raise RuntimeError(f'EDA incompleto: aviso={bool(aviso)}, concepto={bool(concepto)}')
         time.sleep(3)
     report = {'etiqueta': tag, 'empleado_id': emp_id, 'fecha_marcacion': dia,
-              'fecha_ausencia': futuro, 'ausencia_id': aus_id, 'permiso_id': p['ausencia_id'], 'checks': checks}
+              'fecha_ausencia': futuro, 'ausencia_id': aus_id, 'checks': checks}
     destination = ROOT / 'docs' / 'prueba_asistencia_curl.json'
     destination.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(f'{len(checks)} comprobaciones aprobadas; evidencia: {destination}', flush=True)

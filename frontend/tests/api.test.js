@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { allowedPages, createApi, query } from '../src/api.js';
+import { absenceMinDate, allowedPages, createApi, query } from '../src/api.js';
 
 test('roles de empleado y reclutador no reciben navegación de administración', () => {
   assert.equal(allowedPages({ rol: 'empleado' }).includes('empleados'), false);
@@ -28,4 +28,12 @@ test('sesión expirada se comunica y no se oculta el error', async t => {
 test('descarga rechaza respuestas que no sean PDF', async t => {
   t.mock.method(globalThis, 'fetch', async () => new Response('{}', { headers: { 'Content-Type': 'application/json' } }));
   await assert.rejects(createApi('token')('nominas', '/boleta', { pdf: true }), /no devolvió una boleta PDF/);
+});
+
+
+test('ausencias requieren 15 días calendario desde la fecha de Lima', () => {
+  assert.equal(absenceMinDate(new Date('2026-11-10T04:59:59Z')), '2026-11-24');
+  assert.equal(absenceMinDate(new Date('2026-11-10T05:00:00Z')), '2026-11-25');
+  assert.equal(absenceMinDate(new Date('2026-12-20T12:00:00Z')), '2027-01-04');
+  assert.equal(absenceMinDate(new Date('2028-02-15T12:00:00Z')), '2028-03-01');
 });

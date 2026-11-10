@@ -2,6 +2,8 @@
 import asyncio
 import json
 import os
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 from playwright.async_api import async_playwright
@@ -12,7 +14,7 @@ async def main():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True, args=['--no-sandbox'])
         page = await browser.new_page(viewport={'width': 1440, 'height': 1000})
-        errors, posts = [], []
+        errors, posts, absence_posts = [], [], []
         page.on('pageerror', lambda e: errors.append(str(e)))
         mode = {'team_error': False}
 
@@ -41,6 +43,9 @@ async def main():
                 data = {'estado': 'GENERADA', 'total_neto': 100}
             elif path == '/notificaciones':
                 data = {'items': [], 'total': 0}
+            elif path == '/ausencias' and req.method == 'POST':
+                absence_posts.append(req.post_data_json)
+                data = {'estado': 'PENDIENTE'}; status = 201
             elif path == '/vacantes':
                 data = [{'vacante_id': 'vac-A', 'titulo': 'Vacante A de prueba', 'area': 'Equipo', 'estado': 'ABIERTA'}, {'vacante_id': 'vac-B', 'titulo': 'Vacante B de prueba', 'area': 'Equipo', 'estado': 'ABIERTA'}]
             elif path.startswith('/vacantes/'):
@@ -89,6 +94,31 @@ async def main():
         await page.get_by_role('button', name='Vacante B de prueba').click()
         assert await page.get_by_role('heading', name='CV de Candidata de prueba').count() == 0
         checks.append('Documento de ocho dígitos y subida de CV asociada a la vacante correcta')
+        await page.get_by_role('navigation').get_by_role('button', name='Asistencia', exact=True).click()
+        await page.get_by_role('button', name='Solicitar ausencia', exact=True).click()
+        today = datetime.now(ZoneInfo('America/Lima')).date()
+        minimum = (today + timedelta(days=15)).isoformat()
+        start = page.get_by_label('Desde')
+        end = page.get_by_label('Hasta')
+        assert await start.get_attribute('min') == minimum
+        assert await end.get_attribute('min') == minimum
+        await page.get_by_label('Tipo de ausencia').select_option('PERMISO')
+        await page.get_by_label('Motivo').fill('Prueba simulada de anticipación')
+        await start.fill((today + timedelta(days=14)).isoformat())
+        await end.fill(minimum)
+        await page.get_by_role('button', name='Guardar', exact=True).click()
+        assert await start.evaluate('(el) => el.validity.rangeUnderflow')
+        assert not absence_posts
+        await start.fill((today + timedelta(days=20)).isoformat())
+        await page.get_by_role('button', name='Guardar', exact=True).click()
+        await page.get_by_role('alert').filter(has_text='La fecha de fin').wait_for()
+        assert not absence_posts
+        await start.fill(minimum)
+        await end.fill(minimum)
+        await page.get_by_role('button', name='Guardar', exact=True).click()
+        await page.get_by_role('status').filter(has_text='Solicitud enviada').wait_for()
+        assert len(absence_posts) == 1 and absence_posts[0]['desde'] == minimum
+        checks.append('Ausencia bloquea día 14 y fin anterior al inicio; admite día 15 en API simulada')
         await page.get_by_role('button', name='Cerrar sesión', exact=True).click()
         assert await page.get_by_role('combobox').count() == 0
         checks.append('Ingreso solo con correo y contraseña; empresa obtenida de la cuenta')

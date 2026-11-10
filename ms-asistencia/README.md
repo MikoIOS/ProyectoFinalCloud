@@ -2,6 +2,8 @@
 
 Marcaciones, permisos, vacaciones y ausencias del SaaS HCM. Python 3.12, API Gateway, Lambda y DynamoDB; utiliza el Lambda Authorizer y SNS de `ms-usuarios`.
 
+Las ausencias deben comenzar al menos **15 días calendario después de la fecha actual de Lima**. La regla se aplica a todos los tipos y roles, incluido RR. HH.; no admite solicitudes retroactivas ni para hoy. El día 15 sí se admite. La fecha final debe ser igual o posterior a la inicial y la duración máxima sigue siendo 90 días.
+
 ## Reglas
 
 - El tenant se obtiene del JWT. Empleados registran y consultan sus propios datos; RR. HH. puede registrar para otros. RR. HH. y gerentes consultan reportes.
