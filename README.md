@@ -3,6 +3,8 @@
 **Grupo 2 · SaaS tipo HCM (Human Capital Management)**
 Plataforma multi-tenant, serverless y basada en eventos desplegada en AWS.
 
+**Frontend Mimo:** https://main.d2d9bbvg1i7lcp.amplifyapp.com · [Desarrollo y despliegue](frontend/README.md) · [Verificación](docs/frontend_verificacion.md)
+
 ---
 
 ## 1. Resumen del proyecto
@@ -88,7 +90,7 @@ Solución SaaS para gestionar **empleados, nóminas, talento, contratación y de
 - [ ] Plantilla común de Serverless Framework (stages, tablas, permisos)
 - [ ] Autenticación y autorizador reutilizable para todos los APIs
 - [ ] ms-usuarios y ms-empleados funcionando con tenant aislado
-- [ ] Esqueleto del frontend con login, desplegado en Amplify
+- [x] Esqueleto del frontend con login, desplegado en Amplify
 - [ ] Script generador de datos ficticios (3 tenants)
 
 **Entregable:** 2 microservicios desplegados + login funcional.
@@ -109,10 +111,10 @@ Solución SaaS para gestionar **empleados, nóminas, talento, contratación y de
 **Entregable:** los 5+ microservicios desplegados y comunicándose por eventos.
 
 ### Fase 5 – Frontend e integración (17 – 20 Nov)
-- [ ] Pantallas: empleados, nóminas, asistencia y ausencias, vacantes y onboarding, evaluaciones de desempeño, dashboard, portal del empleado
-- [ ] Consumo de todas las APIs con token y tenant
+- [x] Pantallas: empleados, nóminas, asistencia y ausencias, vacantes y onboarding, evaluaciones de desempeño, dashboard, portal del empleado
+- [x] Consumo de todas las APIs con token y tenant
 - [ ] Pruebas con 2 tenants (verificar aislamiento de datos)
-- [ ] Corrección de errores y manejo de fallos
+- [x] Corrección de errores y manejo de fallos
 
 **Entregable:** aplicación completa funcionando en Amplify.
 
@@ -134,12 +136,12 @@ Solución SaaS para gestionar **empleados, nóminas, talento, contratación y de
 ## 5. Checklist final de entrega
 
 - [ ] Diagrama de arquitectura de solución
-- [ ] ≥ 5 microservicios serverless protegidos (API Gateway + Lambda)
+- [x] ≥ 5 microservicios serverless protegidos (API Gateway + Lambda)
 - [ ] Una BD por microservicio, con diseño documentado
-- [ ] ≥ 30,000 registros por microservicio en 3 tenants
-- [ ] S3, SNS y SQS en uso
+- [x] ≥ 30,000 registros por microservicio en 3 tenants
+- [x] S3, SNS y SQS en uso
 - [ ] Despliegue 100% automatizado con Serverless Framework
-- [ ] Frontend en Amplify
+- [x] Frontend en Amplify
 - [ ] Demo con 2 tenants
 - [ ] Informe (Word/PDF) con enlaces públicos a repositorios
 - [ ] PPT resumen
@@ -153,3 +155,28 @@ Solución SaaS para gestionar **empleados, nóminas, talento, contratación y de
 - Commits cortos y descriptivos; Pull Request revisado por al menos 1 persona
 - Nunca subir credenciales de AWS al repositorio (usar variables de entorno / SSM)
 - Un mismo `stage` de pruebas compartido; cada quien usa su propio stage para desarrollar
+
+---
+
+## 7. Estado de despliegue (dev)
+
+Servicios backend desplegados y con datos de prueba:
+
+| Microservicio | Tabla DynamoDB | Registros | API (dev) |
+|---|---|---:|---|
+| ms-usuarios | `hcm-usuarios` | 30,009 | `https://ckuqmvszfj.execute-api.us-east-1.amazonaws.com/dev` |
+| ms-empleados | `hcm-empleados` | 30,005 | Ver colección Postman `postman/ms-empleados-dev.postman_collection.json` |
+| ms-reclutamiento | `hcm-reclutamiento-dev` | 30,463 | `https://ts3pqiwi7e.execute-api.us-east-1.amazonaws.com/dev` |
+| ms-desempeno | `hcm-desempeno-dev` | 30,009 | `https://4gchww17uh.execute-api.us-east-1.amazonaws.com/dev` |
+| ms-notificaciones | `hcm-notificaciones-dev` | 30,321 | Ver colección Postman `postman/ms-notificaciones-dev.postman_collection.json` |
+| **ms-nominas** | **`hcm-nominas-dev`** | **40,508** | **`https://0f0k9vomdk.execute-api.us-east-1.amazonaws.com/dev`** |
+| **ms-asistencia** | **`hcm-asistencia-dev`** | **30,004** | `https://p79musr10g.execute-api.us-east-1.amazonaws.com/dev` |
+
+- El detalle de `ms-nominas` (endpoints, eventos, seed y pruebas) está en `ms-nominas/README.md`.
+- La auditoría de volumen se genera con `python3 scripts/auditoria_bd.py --output docs/metricas_bd.md`; el reporte actual está en `docs/metricas_bd.md`.
+- La colección Postman de nóminas está en `postman/ms-nominas-dev.postman_collection.json`.
+- Prueba EDA de evaluación → notificación aprobada en dev: evidencia y pasos para repetir en [docs/prueba_eda.md](docs/prueba_eda.md).
+- `ms-asistencia` desplegado: [API y reglas](ms-asistencia/README.md), [evidencia de 34 comprobaciones curl](docs/prueba_asistencia.md) y [colección Postman](postman/ms-asistencia-dev.postman_collection.json). Flujo SIN_GOCE → notificación y concepto de nómina verificado.
+- Alarmas EDA: [25 alarmas desplegadas](monitorizacion/README.md), con [prueba de alerta y recuperación en AWS](docs/prueba_alarmas.md) y entregas SNS verificadas. Los consumidores de usuarios y empleados se [recuperaron](docs/recuperacion_consumidores_eda.md): 7 mensajes procesados y 25 alarmas en OK.
+- Las cuentas demo de gerente y reclutador de Andina están [reactivadas y con login verificado](docs/reactivacion_cuentas_demo.json).
+- Boletas: [archivado privado en S3 y descarga verificada con dos tenants](docs/prueba_boletas_s3.md).

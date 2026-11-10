@@ -4,12 +4,34 @@ const { PublishCommand } = require('@aws-sdk/client-sns');
 const { construirDestinos, guardar } = require('./notificaciones');
 const { sns } = require('../lib/sns');
 
-async function _avisarPorEmail({ tenant_id, tipo, destinatario_id, mensaje, email }) {
+const ASUNTOS_ASISTENCIA = {
+  AusenciaSolicitada: 'Nueva solicitud de ausencia',
+  AusenciaAprobada: 'Solicitud de ausencia aprobada',
+  AusenciaFinalizada: 'Ausencia finalizada',
+};
+
+async function _avisarPorEmail({ tenant_id, tipo, destinatario_id, mensaje, email, datos }) {
   if (!process.env.EMAIL_TOPIC_ARN) return;
+  const asunto = ASUNTOS_ASISTENCIA[tipo];
   await sns.send(new PublishCommand({
     TopicArn: process.env.EMAIL_TOPIC_ARN,
-    Subject: `[HCM/${tenant_id}] ${tipo}`.slice(0, 99),
-    Message: JSON.stringify({
+    Subject: `[HCM/${tenant_id}] ${asunto || tipo}`.slice(0, 99),
+    Message: asunto ? [
+      'Hola,',
+      '',
+      asunto + '.',
+      '',
+      `Empresa: ${tenant_id}`,
+      `Empleado: ${datos.nombre_empleado || datos.empleado_id || 'Sin especificar'}`,
+      `Tipo de ausencia: ${(datos.tipo || 'Sin especificar').replace(/_/g, ' ')}`,
+      `Desde: ${datos.desde || 'Sin especificar'}`,
+      `Hasta: ${datos.hasta || 'Sin especificar'}`,
+      `Duración: ${datos.dias ?? 'Sin especificar'} día(s)`,
+      '',
+      'Si necesitas más información, comunícate con Recursos Humanos.',
+      '',
+      'Equipo HCM',
+    ].join('\n') : JSON.stringify({
       tipo_evento: tipo,
       tenant_id,
       destinatario_id,
@@ -58,6 +80,7 @@ async function procesarEvento(evt) {
         destinatario_id: destino.destinatario_id,
         mensaje: destino.mensaje,
         email: datos.email,
+        datos,
       });
     }
   }

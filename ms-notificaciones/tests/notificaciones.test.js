@@ -51,3 +51,64 @@ test('El id de idempotencia es estable y distinto por destinatario', () => {
   assert.equal(a, b);
   assert.notEqual(a, c);
 });
+
+test('La notificación conserva ausencia_id para consultar el flujo EDA', async () => {
+  const { ddb } = require('../src/lib/db');
+  const { guardar } = require('../src/services/notificaciones');
+  const send = ddb.send;
+  let item;
+  ddb.send = async (command) => { item = command.input.Item; return {}; };
+  try {
+    await guardar({ tenant_id: 'andina', tipo: 'AusenciaAprobada', destinatario_id: 'usr-000002',
+      mensaje: 'Prueba', datos: { ausencia_id: 'aus-prueba', empleado_id: 'emp-000002' } });
+    assert.equal(item.metadata.ausencia_id, 'aus-prueba');
+  } finally {
+    ddb.send = send;
+  }
+});
+
+test('Los correos de asistencia contienen mensajes legibles para cada estado', async () => {
+  const { ddb } = require('../src/lib/db');
+  const { sns } = require('../src/lib/sns');
+  const { procesarEvento } = require('../src/services/eventos');
+  const originalDdb = ddb.send;
+  const originalSns = sns.send;
+  const originalTopic = process.env.EMAIL_TOPIC_ARN;
+  const enviados = [];
+  ddb.send = async () => ({});
+  sns.send = async (command) => { enviados.push(command.input); return {}; };
+  process.env.EMAIL_TOPIC_ARN = 'arn:aws:sns:us-east-1:123456789012:email-test';
+  try {
+    for (const [tipo, titulo] of [
+      ['AusenciaSolicitada', 'Nueva solicitud de ausencia'],
+      ['AusenciaAprobada', 'Solicitud de ausencia aprobada'],
+      ['AusenciaFinalizada', 'Ausencia finalizada'],
+    ]) {
+      await procesarEvento({ tipo_evento: tipo, tenant_id: 'andina', datos: {
+        ausencia_id: 'aus-prueba', empleado_id: 'emp-000002', nombre_empleado: 'Miguel Espinoza',
+        tipo: 'SIN_GOCE', desde: '2035-07-14', hasta: '2035-07-15', dias: 2,
+      } });
+      const email = enviados.at(-1);
+      assert.equal(email.Subject, `[HCM/andina] ${titulo}`);
+      assert.match(email.Message, /Hola,\n/);
+      assert.match(email.Message, /Empleado: Miguel Espinoza/);
+      assert.match(email.Message, /Tipo de ausencia: SIN GOCE/);
+      assert.match(email.Message, /Desde: 2035-07-14/);
+      assert.match(email.Message, /Hasta: 2035-07-15/);
+      assert.match(email.Message, /Duración: 2 día\(s\)/);
+      assert.throws(() => JSON.parse(email.Message));
+    }
+    await procesarEvento({ tipo_evento: 'AusenciaAprobada', tenant_id: 'andina',
+      datos: { empleado_id: 'emp-000002' } });
+    assert.match(enviados.at(-1).Message, /Empleado: emp-000002/);
+    assert.match(enviados.at(-1).Message, /Desde: Sin especificar/);
+    await procesarEvento({ tipo_evento: 'NominaGenerada', tenant_id: 'andina',
+      datos: { empleado_id: 'emp-000002', periodo: '2026-11' } });
+    assert.equal(JSON.parse(enviados.at(-1).Message).tipo_evento, 'NominaGenerada');
+  } finally {
+    ddb.send = originalDdb;
+    sns.send = originalSns;
+    if (originalTopic === undefined) delete process.env.EMAIL_TOPIC_ARN;
+    else process.env.EMAIL_TOPIC_ARN = originalTopic;
+  }
+});

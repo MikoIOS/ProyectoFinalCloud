@@ -1,0 +1,246 @@
+{
+  "fecha": "2026-11-09T23:06:19.321590+00:00",
+  "antes": {
+    "fecha": "2026-11-09T23:00:55.804293+00:00",
+    "colas": {
+      "ms-usuarios-eventos": {
+        "ApproximateNumberOfMessages": "2",
+        "ApproximateNumberOfMessagesNotVisible": "0",
+        "ApproximateNumberOfMessagesDelayed": "0"
+      },
+      "ms-empleados-eventos": {
+        "ApproximateNumberOfMessages": "5",
+        "ApproximateNumberOfMessagesNotVisible": "0",
+        "ApproximateNumberOfMessagesDelayed": "0"
+      },
+      "ms-usuarios-eventos-dlq": {
+        "ApproximateNumberOfMessages": "0",
+        "ApproximateNumberOfMessagesNotVisible": "0",
+        "ApproximateNumberOfMessagesDelayed": "0"
+      },
+      "ms-empleados-eventos-dlq": {
+        "ApproximateNumberOfMessages": "0",
+        "ApproximateNumberOfMessagesNotVisible": "0",
+        "ApproximateNumberOfMessagesDelayed": "0"
+      }
+    }
+  },
+  "conexiones": [
+    {
+      "funcion": "ms-usuarios-dev-procesarEventos",
+      "uuid": "b4e74f30-1c53-4422-9672-5fc2b481d049",
+      "estado": "Enabled",
+      "resultado": null
+    },
+    {
+      "funcion": "ms-empleados-dev-procesarEventos",
+      "uuid": "e5b2843e-1250-4be1-a2f8-7d828ac43947",
+      "estado": "Enabled",
+      "resultado": null
+    }
+  ],
+  "colas_finales": {
+    "ms-usuarios-eventos": {
+      "ApproximateNumberOfMessages": "0",
+      "ApproximateNumberOfMessagesNotVisible": "0",
+      "ApproximateNumberOfMessagesDelayed": "0"
+    },
+    "ms-empleados-eventos": {
+      "ApproximateNumberOfMessages": "0",
+      "ApproximateNumberOfMessagesNotVisible": "0",
+      "ApproximateNumberOfMessagesDelayed": "0"
+    },
+    "ms-usuarios-eventos-dlq": {
+      "ApproximateNumberOfMessages": "0",
+      "ApproximateNumberOfMessagesNotVisible": "0",
+      "ApproximateNumberOfMessagesDelayed": "0"
+    },
+    "ms-empleados-eventos-dlq": {
+      "ApproximateNumberOfMessages": "0",
+      "ApproximateNumberOfMessagesNotVisible": "0",
+      "ApproximateNumberOfMessagesDelayed": "0"
+    }
+  },
+  "monitor": {
+    "canales_no_habilitados": []
+  },
+  "mensajes_eliminados_por_integracion_sqs_ultimos_20_minutos": {
+    "usuarios": 2.0,
+    "empleados": 5.0
+  },
+  "alarmas": [
+    {
+      "nombre": "hcm-dev-eda-asistencia-errores",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:44:16.626000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-asistencia-stream-retraso",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:44:22.159000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-avisos-errores",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:44:22.146000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-calendario-errores",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:44:05.903000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-canales-deshabilitados",
+      "estado": "OK",
+      "actualizada": "2026-11-09T18:04:42.586000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-comprobar-canales-errores",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:44:26.232000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-correo-entrega-fallida",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:44:46.549000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-empleados-dlq",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:43:53.643000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-empleados-errores",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:43:55.173000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-empleados-retraso",
+      "estado": "OK",
+      "actualizada": "2026-11-09T18:05:07.705000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-eventos-entrega-fallida",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:44:17.567000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-fallos-capturados",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:43:23.117000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-nominas-dlq",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:43:33.382000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-nominas-errores",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:44:42.695000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-nominas-retraso",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:44:09.671000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-notificaciones-dlq",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:43:50.770000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-notificaciones-errores",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:43:20.670000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-notificaciones-retraso",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:44:30.037000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-planillas-dlq",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:44:02.168000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-planillas-errores",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:43:56.383000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-planillas-retraso",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:44:10.580000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-prueba",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:48:21.833000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-usuarios-dlq",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:43:41.629000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-usuarios-errores",
+      "estado": "OK",
+      "actualizada": "2026-11-09T17:44:24.078000-05:00"
+    },
+    {
+      "nombre": "hcm-dev-eda-usuarios-retraso",
+      "estado": "OK",
+      "actualizada": "2026-11-09T18:04:23.500000-05:00"
+    }
+  ],
+  "cuentas_observadas": [
+    {
+      "tenant_id": "andina",
+      "empleado_id": "emp-000003",
+      "estado_empleado": "ACTIVO",
+      "usuario_activo": false,
+      "rol": "gerente"
+    },
+    {
+      "tenant_id": "andina",
+      "empleado_id": "emp-000004",
+      "estado_empleado": "ACTIVO",
+      "usuario_activo": false,
+      "rol": "reclutador"
+    },
+    {
+      "tenant_id": "pacifico",
+      "empleado_id": "emp-000003",
+      "estado_empleado": "ACTIVO",
+      "usuario_activo": true,
+      "rol": "gerente"
+    },
+    {
+      "tenant_id": "pacifico",
+      "empleado_id": "emp-000004",
+      "estado_empleado": "ACTIVO",
+      "usuario_activo": true,
+      "rol": "reclutador"
+    },
+    {
+      "tenant_id": "sierra",
+      "empleado_id": "emp-000003",
+      "estado_empleado": "ACTIVO",
+      "usuario_activo": true,
+      "rol": "gerente"
+    },
+    {
+      "tenant_id": "sierra",
+      "empleado_id": "emp-000004",
+      "estado_empleado": "ACTIVO",
+      "usuario_activo": true,
+      "rol": "reclutador"
+    }
+  ],
+  "resolucion_cuentas": {
+    "estado": "Ambas reactivadas por instrucción del usuario",
+    "evidencia": "reactivacion_cuentas_demo.json"
+  }
+}

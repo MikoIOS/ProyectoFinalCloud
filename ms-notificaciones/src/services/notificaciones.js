@@ -102,6 +102,7 @@ async function guardar({ tenant_id, tipo, destinatario_id, mensaje, datos, times
     email,
     metadata: _limpio({
       empleado_id: d.empleado_id,
+      ausencia_id: d.ausencia_id,
       postulacion_id: d.postulacion_id,
       vacante_id: d.vacante_id,
       evaluacion_id: d.evaluacion_id,

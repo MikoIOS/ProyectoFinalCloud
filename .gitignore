@@ -13,6 +13,11 @@ venv/
 
 # Node / Serverless / AWS SAM
 node_modules/
+dist/
+.wde/
+audit-results/
+playwright-report/
+test-results/
 .serverless/
 .aws-sam/
 

@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import re
 import uuid
 from datetime import date, datetime, timezone, timedelta
 from decimal import Decimal, InvalidOperation
@@ -129,6 +130,9 @@ def crear(event, context):
     vacante_id = body.get('vacante_id')
     if not vacante_id:
         return _resp(400, {'error': 'vacante_id requerido'})
+    documento = body.get('documento')
+    if documento not in (None, '') and (not isinstance(documento, str) or not re.fullmatch(r'[0-9]{8}', documento)):
+        return _resp(400, {'error': 'documento debe tener exactamente 8 dígitos'})
 
     post_id = f"pos-{uuid.uuid4().hex[:8]}"
     cv_key = f"{tenant_id}/cvs/{post_id}.pdf"
