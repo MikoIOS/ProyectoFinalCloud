@@ -19,7 +19,7 @@ Success looks like: login real, datos del tenant correcto, formularios funcional
 
 ## Critical journeys
 
-1. Elegir Andina/Pacífico/Sierra, ingresar credenciales, ver datos reales y cerrar sesión sin conservar datos del tenant anterior.
+1. Ingresar correo y contraseña, obtener automáticamente la empresa de la cuenta, ver datos reales y cerrar sesión sin conservar datos del tenant anterior.
 2. Registrar entrada/salida, solicitar ausencia y aprobarla desde RRHH; refrescar lista tras éxito.
 3. Consultar nómina propia, descargar PDF con autorización y recibir errores legibles.
 4. Crear evaluación y completarla; consultar notificaciones publicadas por EDA.
@@ -40,7 +40,7 @@ Success looks like: login real, datos del tenant correcto, formularios funcional
 
 | Form | Fields | Validation | Error strategy | Success |
 |---|---|---|---|---|
-| Login | Empresa, correo, contraseña | required, email | No registrar credenciales | Sesión solo en memoria |
+| Login | Correo, contraseña | required, email | No registrar credenciales | Sesión solo en memoria |
 | Empleado | Nombres, apellidos, correo, documento, área, cargo, fecha, sueldo | required y tipos nativos | Error API | Actualizar listado |
 | Ausencia | Tipo, desde, hasta, motivo | Fechas y texto requeridos | Error API | Recarga |
 | Reclutamiento | Vacante y candidato con PDF opcional | Campos requeridos | Error API o subida | Listado actualizado |

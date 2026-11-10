@@ -36,6 +36,24 @@ def get_by_email(tenant_id, email):
     return items[0] if items else None
 
 
+def get_by_login_email(email):
+    resp = _table().query(
+        IndexName="login-email-index",
+        KeyConditionExpression=Key("email").eq(email.lower()),
+        Limit=2,
+    )
+    items = resp.get("Items", [])
+    # Un correo ambiguo nunca debe iniciar sesión en una empresa arbitraria.
+    if len(items) != 1 or resp.get("LastEvaluatedKey"):
+        return None
+    item = items[0]
+    usuario = _table().get_item(
+        Key={"tenant_id": item["tenant_id"], "user_id": item["user_id"]},
+        ConsistentRead=True,
+    ).get("Item")
+    return usuario if usuario and usuario.get("email") == email.lower() else None
+
+
 def get(tenant_id, user_id):
     return _table().get_item(Key={"tenant_id": tenant_id, "user_id": user_id}).get("Item")
 

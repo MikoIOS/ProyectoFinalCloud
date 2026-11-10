@@ -1,17 +1,17 @@
 {
-  "verified_at": "2026-11-10T00:33:27.057304+00:00",
+  "verified_at": "2026-11-10T00:49:20.495878+00:00",
   "amplify": {
     "app_id": "d2d9bbvg1i7lcp",
     "default_domain": "d2d9bbvg1i7lcp.amplifyapp.com",
     "branch": "main",
     "region": "us-east-1",
-    "job_id": "1",
+    "job_id": "2",
     "url": "https://main.d2d9bbvg1i7lcp.amplifyapp.com",
     "status": "SUCCEED"
   },
   "production_assets": {
-    "index-CRi5k4j4.css": "b5929c1c9c2e8364c2b0e27559ba81c90a7263e4d6ab929840d31a594b007d49",
-    "index-Df0bxxDK.js": "a5e7f44cd4d1a17a56e624c16bbf619e99653e43f617d130fb84e6ec909a1a9d"
+    "index-BUu4RoNw.css": "ea0768006209cc7c49fcc7fceeacf21cd38b324f3d754630a2ba20e65047585d",
+    "index-CQu3LLMg.js": "4e9eea2cd6f697b11b0d4c0e49b3a452ee83f2a412323745d74211964a9e4e11"
   },
   "production_browser": {
     "url": "https://main.d2d9bbvg1i7lcp.amplifyapp.com",
@@ -37,7 +37,7 @@
       "Skeleton en el espacio de las filas durante la petición demorada",
       "Error de consulta y reintento recuperan el listado",
       "Documento de ocho dígitos y subida de CV asociada a la vacante correcta",
-      "Logout conserva la empresa elegida al iniciar sesión",
+      "Ingreso solo con correo y contraseña; empresa obtenida de la cuenta",
       "Menú móvil oculto para teclado y lectores, cierre con Escape y sin desbordamiento",
       "Skeleton móvil respeta movimiento reducido",
       "Sin tokens persistidos ni errores de JavaScript"
@@ -52,7 +52,8 @@
     "notificaciones": 7,
     "monitorizacion_python": 6,
     "monitorizacion_node": 6,
-    "scripts_alarmas_eda": 7
+    "scripts_alarmas_eda": 7,
+    "usuarios": 47
   },
   "deployment_mode": "manual artifact upload; GitHub auto build not connected",
   "wde_ready": false,

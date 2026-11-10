@@ -19,13 +19,13 @@ Las URLs públicas de las siete APIs están en `src/api.js`. Se pueden sustituir
 
 ## Funcionalidad
 
-Login por empresa, dashboard, empleados y ficha personal, nóminas y boletas PDF, marcaciones y ausencias, vacantes y postulaciones con CV, evaluaciones y notificaciones. Las acciones visibles dependen del rol; las APIs siguen siendo responsables de autorizar cada operación. Las contrataciones requieren confirmación.
+Login con correo y contraseña (la empresa se obtiene de la cuenta), dashboard, empleados y ficha personal, nóminas y boletas PDF, marcaciones y ausencias, vacantes y postulaciones con CV, evaluaciones y notificaciones. Las acciones visibles dependen del rol; las APIs siguen siendo responsables de autorizar cada operación. Las contrataciones requieren confirmación.
 
-El JWT permanece en memoria. Recargar la página, salir o cambiar de empresa requiere iniciar sesión otra vez; no se almacena en localStorage/sessionStorage. La navegación usa hashes, sin depender de reglas de reescritura. Los errores de API se muestran y permiten reintentar. La carga de CV admite PDF de hasta 10 MB mediante la URL firmada emitida por la API, sin enviarle el JWT a S3.
+El JWT permanece en memoria. Recargar la página o salir requiere iniciar sesión otra vez; no se almacena en localStorage/sessionStorage. La navegación usa hashes, sin depender de reglas de reescritura. Los errores de API se muestran y permiten reintentar. La carga de CV admite PDF de hasta 10 MB mediante la URL firmada emitida por la API, sin enviarle el JWT a S3.
 
 ## Verificación
 
-`npm test`: cinco pruebas del cliente API. `tests/browser_smoke.py`: siete comprobaciones de Chromium con APIs simuladas, incluyendo esqueletos, reintentos, validación de documento, asociación del CV, sesión y menú móvil. Requiere Python Playwright y Chromium; ejecutar con el servidor local activo. `HCM_UI_URL` permite cambiar el destino.
+`npm test`: cinco pruebas del cliente API. `tests/browser_smoke.py`: siete comprobaciones de Chromium con APIs simuladas, incluyendo esqueletos, reintentos, validación de documento, asociación del CV, acceso sin selector de empresa, sesión y menú móvil. Requiere Python Playwright y Chromium; ejecutar con el servidor local activo. `HCM_UI_URL` permite cambiar el destino.
 
 Las comprobaciones reales de AWS y Amplify están descritas en [la evidencia](../docs/frontend_verificacion.md); se distinguen de las pruebas simuladas.
 

@@ -26,7 +26,8 @@ async def main():
             user = {'tenant_id': tenant, 'nombre': 'Equipo de prueba', 'rol': 'admin_rrhh', 'user_id': 'usr-000001', 'empleado_id': 'emp-000001'}
             status, data = 200, {}
             if path == '/auth/login':
-                tenant = req.post_data_json['tenant_id']; user['tenant_id'] = tenant
+                assert set(req.post_data_json) == {'email', 'password'}
+                tenant = 'pacifico'; user['tenant_id'] = tenant
                 data = {'token': 'test-' + tenant, 'usuario': user}
             elif path == '/empleados/resumen':
                 data = {'total': 1, 'por_estado': {'ACTIVO': 1}, 'por_area': {'Equipo de prueba': 1}}
@@ -53,11 +54,13 @@ async def main():
 
         await page.route('https://*.execute-api.us-east-1.amazonaws.com/**', api)
         await page.goto(os.environ.get('HCM_UI_URL', 'http://127.0.0.1:5173'), wait_until='networkidle')
-        await page.get_by_label('Tu empresa').select_option('pacifico')
+        assert await page.get_by_role('combobox').count() == 0
         await page.get_by_label('Correo electrónico').fill('prueba@example.invalid')
         await page.get_by_label('Contraseña', exact=True).fill('prueba-local')
         await page.get_by_role('button', name='Entrar a mi espacio').click()
         await page.get_by_role('heading', name='Tu espacio de hoy.').wait_for()
+        assert await page.locator('.app-shell').get_attribute('data-tenant') == 'pacifico'
+        assert await page.get_by_label('Empresa de tu cuenta').inner_text() == 'Pacífico'
         await page.get_by_role('status', name='Cargando contenido').first.wait_for(state='visible')
         await page.screenshot(path='/tmp/hcm-skeleton-desktop.png', full_page=True)
         checks.append('Skeleton en el espacio de las filas durante la petición demorada')
@@ -87,8 +90,8 @@ async def main():
         assert await page.get_by_role('heading', name='CV de Candidata de prueba').count() == 0
         checks.append('Documento de ocho dígitos y subida de CV asociada a la vacante correcta')
         await page.get_by_role('button', name='Cerrar sesión', exact=True).click()
-        assert await page.get_by_label('Tu empresa').input_value() == 'pacifico'
-        checks.append('Logout conserva la empresa elegida al iniciar sesión')
+        assert await page.get_by_role('combobox').count() == 0
+        checks.append('Ingreso solo con correo y contraseña; empresa obtenida de la cuenta')
         await page.set_viewport_size({'width': 375, 'height': 812})
         await page.get_by_label('Correo electrónico').fill('prueba@example.invalid')
         await page.get_by_label('Contraseña', exact=True).fill('prueba-local')
