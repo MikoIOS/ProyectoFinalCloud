@@ -1,0 +1,14 @@
+{
+  "repository": "https://github.com/Armandorc7/frontend_mimo",
+  "url": "https://main.d2d9bbvg1i7lcp.amplifyapp.com",
+  "amplify": {
+    "app_id": "d2d9bbvg1i7lcp",
+    "branch": "main",
+    "job_id": "5",
+    "url": "https://main.d2d9bbvg1i7lcp.amplifyapp.com",
+    "region": "us-east-1",
+    "status": "SUCCEED"
+  },
+  "verified_at": "2026-11-12T19:53:39.923575+00:00",
+  "evidence": "https://github.com/Armandorc7/frontend_mimo/blob/main/docs/deployment-latest.json"
+}

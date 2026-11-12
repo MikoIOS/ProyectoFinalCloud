@@ -56,6 +56,11 @@ functions:
     events:
       - http: { path: auth/cambiar-password, method: post, cors: true, authorizer: "${self:custom.auth}" }
 
+  registrarEmpresa:
+    handler: src/handlers/auth.registrar_empresa
+    events:
+      - http: { path: auth/register, method: post, cors: true }
+
   miUsuario:
     handler: src/handlers/usuarios.mi_usuario
     events:

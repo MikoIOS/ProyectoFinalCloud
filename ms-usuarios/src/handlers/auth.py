@@ -11,6 +11,11 @@ def login(event, context=None):
 
 
 @api
+def registrar_empresa(event, context=None):
+    return ok(auth_service.registrar_empresa(json_body(event)), status=201)
+
+
+@api
 def cambiar_password(event, context=None):
     ctx = contexto(event)  # cualquier rol autenticado
     return ok(usuarios_service.cambiar_password(ctx, json_body(event)))

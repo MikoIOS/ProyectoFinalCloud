@@ -890,6 +890,43 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Registro de empresa (manual)",
+      "item": [
+        {
+          "name": "Crear empresa y administrador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Crea una empresa nueva. Usa un correo distinto en cada registro; no modifica los tenants de demo. Devuelve 201 y sesión; 409 si ya existe el correo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empresa\": \"Mi Empresa\",\n  \"nombre\": \"Administrador\",\n  \"email\": \"admin-{{$timestamp}}@example.com\",\n  \"password\": \"Demo1234!\",\n  \"ruc\": \"20123456789\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   ]
 }

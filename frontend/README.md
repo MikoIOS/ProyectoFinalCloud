@@ -19,6 +19,8 @@ Las URLs públicas de las siete APIs están en `src/api.js`. Se pueden sustituir
 
 ## Funcionalidad
 
+Desde el login, **¿Tu empresa es nueva? Crear cuenta** abre el registro de empresa y administrador (empresa, RUC de 11 dígitos, nombre, correo y contraseña). `POST /auth/register` genera la empresa y devuelve la sesión inicial; el nombre de la empresa se muestra en el portal. Publicado en AWS y Amplify; [evidencia del deployment](../docs/deployment_registro_empresa.json). Los próximos cambios de la ruta requieren un despliegue completo de `ms-usuarios` y publicar nuevamente este frontend.
+
 Login con correo y contraseña (la empresa se obtiene de la cuenta), dashboard, empleados y ficha personal, nóminas y boletas PDF, marcaciones y ausencias, vacantes y postulaciones con CV, evaluaciones y notificaciones. Las acciones visibles dependen del rol; las APIs siguen siendo responsables de autorizar cada operación. Las contrataciones requieren confirmación.
 
 El JWT permanece en memoria. Recargar la página o salir requiere iniciar sesión otra vez; no se almacena en localStorage/sessionStorage. La navegación usa hashes, sin depender de reglas de reescritura. Los errores de API se muestran y permiten reintentar. La carga de CV admite PDF de hasta 10 MB mediante la URL firmada emitida por la API, sin enviarle el JWT a S3.

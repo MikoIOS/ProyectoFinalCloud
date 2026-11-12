@@ -1,0 +1,67 @@
+{
+  "verified_at": "2026-11-12T19:39:04.031827+00:00",
+  "amplify": {
+    "app_id": "d2d9bbvg1i7lcp",
+    "branch": "main",
+    "job_id": "4",
+    "url": "https://main.d2d9bbvg1i7lcp.amplifyapp.com",
+    "region": "us-east-1",
+    "status": "SUCCEED"
+  },
+  "backend": {
+    "stack": "ms-usuarios-dev",
+    "status": "UPDATE_COMPLETE",
+    "register_function": "ms-usuarios-dev-registrarEmpresa",
+    "lambda_source_matches_local": true
+  },
+  "public_artifact_sha256": {
+    "favicon.svg": "1082c0296bc020dfc8b1a8ae267dc925c29e96a08967d04a3e0f00892c6ccedc",
+    "index.html": "35bb2fc91ced9007e005a7e054de7671272461174bbb75d9ec74d74148842337",
+    "assets/index-BUu4RoNw.css": "ea0768006209cc7c49fcc7fceeacf21cd38b324f3d754630a2ba20e65047585d",
+    "assets/index-BTvLl0Vg.js": "be3b3078e33e9ea248c96a438e3fb47e9b0dcc03f9f7a4008b308e18ba08737b"
+  },
+  "unit_tests": {
+    "usuarios": 55,
+    "registro_subtests": 17,
+    "frontend": 6
+  },
+  "real_api": {
+    "checks": [
+      "RUC inválido rechazado sin crear cuenta",
+      "Registro real crea administrador, empresa y sesión con RUC",
+      "Correo repetido rechazado",
+      "Ingreso posterior solo con correo y contraseña recupera la empresa creada",
+      "Login de cuenta Andina existente compatible",
+      "Cuenta y reserva temporales eliminadas al terminar"
+    ],
+    "temporary_test_account_removed": true
+  },
+  "real_browser": {
+    "url": "https://main.d2d9bbvg1i7lcp.amplifyapp.com",
+    "checks": [
+      "Registro público exige RUC de 11 dígitos sin enviar datos inválidos",
+      "Login real de Andina y dashboard funcionan después del despliegue",
+      "Registro móvil 375 px sin desbordamiento, errores JavaScript ni violaciones CSP"
+    ],
+    "page_errors": []
+  },
+  "browser_with_simulated_apis": {
+    "checks": [
+      "Registro de empresa con administrador, sesión automática y nombre de empresa",
+      "Skeleton en el espacio de las filas durante la petición demorada",
+      "Error de consulta y reintento recuperan el listado",
+      "Documento de ocho dígitos y subida de CV asociada a la vacante correcta",
+      "Ausencia bloquea día 14 y fin anterior al inicio; admite día 15 en API simulada",
+      "Ingreso solo con correo y contraseña; empresa obtenida de la cuenta",
+      "Menú móvil oculto para teclado y lectores, cierre con Escape y sin desbordamiento",
+      "Skeleton móvil respeta movimiento reducido",
+      "Sin tokens persistidos ni errores de JavaScript"
+    ]
+  },
+  "limits": [
+    "RUC validado por formato, sin consulta SUNAT",
+    "Sin verificación de propiedad del correo",
+    "Safari y Firefox sin comprobar",
+    "Amplify sin redeploy automático desde GitHub"
+  ]
+}

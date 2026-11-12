@@ -28,3 +28,6 @@ test-results/
 # Sistema operativo
 .DS_Store
 Thumbs.db
+
+# Frontend principal: repositorio Git independiente
+frontend_mimo/

@@ -30,6 +30,14 @@ Con Serverless v3 puede salir un aviso por `python3.12` en el esquema; es solo u
 ## Cuentas de demo (clave `Demo1234!`, mismas en cada tenant: andina, pacifico, sierra)
 `admin@<tenant>.pe` (admin_rrhh) · `gerente@<tenant>.pe` · `reclutador@<tenant>.pe` · `empleado@<tenant>.pe`
 
+## Registro de empresa
+
+`POST /auth/register` es público. Recibe `empresa`, `ruc` obligatorio (11 dígitos), `nombre` del administrador, `email` y `password` (8–128 caracteres). Devuelve `201` con `token`, `expires_in` y `usuario`, igual que login. El servidor genera el `tenant_id` y el `user_id`, asigna `admin_rrhh` y guarda `empresa_nombre` en la cuenta. Rechaza campos como `tenant_id` o `rol`; el correo debe estar libre para evitar un login ambiguo. `400` indica datos inválidos y `409` un correo ya registrado.
+
+La reserva del correo y el administrador se escriben en una transacción DynamoDB sobre `hcm-usuarios`. La reserva usa la partición interna `__registro_empresas__` sin atributos de los índices de login. El rol Lambda requiere `dynamodb:TransactWriteItems` sobre esa tabla. El control atómico cubre registros públicos concurrentes; las altas internas de usuarios conservan su unicidad por tenant.
+
+Se requiere un despliegue completo de `ms-usuarios` para crear la ruta y la función; `deploy function` no basta. Mantener el `JWT_SECRET` actual para no invalidar sesiones existentes. La colección Postman incluye un registro manual que crea datos nuevos, separado de los logins de demo. Pruebas del registro sin AWS: `python3 -m unittest discover -s tests/unit -p test_registro_empresa.py -v`. El RUC se guarda como texto en la cuenta y se devuelve en la sesión; se valida su formato, sin consultar SUNAT. No se incluye verificación de correo en este flujo.
+
 ## Estructura del proyecto
 ```
 ms-usuarios/

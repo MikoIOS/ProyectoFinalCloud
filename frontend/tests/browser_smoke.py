@@ -31,6 +31,13 @@ async def main():
                 assert set(req.post_data_json) == {'email', 'password'}
                 tenant = 'pacifico'; user['tenant_id'] = tenant
                 data = {'token': 'test-' + tenant, 'usuario': user}
+            elif path == '/auth/register':
+                body = req.post_data_json
+                assert set(body) == {'empresa', 'ruc', 'nombre', 'email', 'password'}
+                assert body['ruc'] == '20123456789'
+                assert body['empresa'] == 'Nueva Empresa'
+                user.update(tenant_id='empresa-prueba', empresa_nombre=body['empresa'], nombre=body['nombre'])
+                status, data = 201, {'token': 'test-empresa-prueba', 'usuario': user}
             elif path == '/empleados/resumen':
                 data = {'total': 1, 'por_estado': {'ACTIVO': 1}, 'por_area': {'Equipo de prueba': 1}}
             elif path == '/empleados':
@@ -60,6 +67,19 @@ async def main():
         await page.route('https://*.execute-api.us-east-1.amazonaws.com/**', api)
         await page.goto(os.environ.get('HCM_UI_URL', 'http://127.0.0.1:5173'), wait_until='networkidle')
         assert await page.get_by_role('combobox').count() == 0
+        await page.get_by_role('button', name='¿Tu empresa es nueva? Crear cuenta').click()
+        await page.get_by_label('Nombre de la empresa', exact=True).fill('Nueva Empresa')
+        await page.get_by_label('RUC', exact=True).fill('20123456789')
+        await page.get_by_label('Tu nombre', exact=True).fill('Administradora')
+        await page.get_by_label('Correo electrónico').fill('admin@nueva.example')
+        await page.get_by_label('Contraseña', exact=True).fill('prueba-local')
+        assert await page.get_by_label('Contraseña', exact=True).get_attribute('autocomplete') == 'new-password'
+        await page.get_by_role('button', name='Crear mi empresa', exact=True).click()
+        await page.get_by_role('heading', name='Tu espacio de hoy.').wait_for()
+        assert await page.locator('.app-shell').get_attribute('data-tenant') == 'empresa-prueba'
+        assert await page.locator('.company-name').inner_text() == 'Nueva Empresa'
+        await page.get_by_role('button', name='Cerrar sesión', exact=True).click()
+        checks.append('Registro de empresa con administrador, sesión automática y nombre de empresa')
         await page.get_by_label('Correo electrónico').fill('prueba@example.invalid')
         await page.get_by_label('Contraseña', exact=True).fill('prueba-local')
         await page.get_by_role('button', name='Entrar a mi espacio').click()

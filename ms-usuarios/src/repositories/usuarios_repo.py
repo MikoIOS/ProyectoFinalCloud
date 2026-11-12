@@ -54,6 +54,34 @@ def get_by_login_email(email):
     return usuario if usuario and usuario.get("email") == email.lower() else None
 
 
+def email_existe(email):
+    return bool(_table().query(
+        IndexName="login-email-index",
+        KeyConditionExpression=Key("email").eq(email),
+        Limit=1,
+    ).get("Items"))
+
+
+def registrar_empresa(usuario):
+    """Reserva el correo y crea el administrador juntos, incluso con registros simultáneos."""
+    tabla = _table()
+    usuario = dict(usuario, created_at=_now(), updated_at=_now())
+    reserva = {"tenant_id": "__registro_empresas__", "user_id": "EMAIL#" + usuario["email"]}
+    try:
+        tabla.meta.client.transact_write_items(TransactItems=[
+            {"Put": {"TableName": tabla.name, "Item": item,
+                     "ConditionExpression": "attribute_not_exists(user_id)"}}
+            for item in (reserva, usuario)
+        ])
+    except ClientError as e:
+        motivos = e.response.get("CancellationReasons", [])
+        if _code(e) == "TransactionCanceledException" and any(
+                m.get("Code") == "ConditionalCheckFailed" for m in motivos):
+            raise Conflicto("Este correo ya tiene una cuenta. Inicia sesión")
+        raise
+    return usuario
+
+
 def get(tenant_id, user_id):
     return _table().get_item(Key={"tenant_id": tenant_id, "user_id": user_id}).get("Item")
 

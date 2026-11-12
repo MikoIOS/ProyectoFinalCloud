@@ -3,7 +3,9 @@
 **Grupo 2 · SaaS tipo HCM (Human Capital Management)**
 Plataforma multi-tenant, serverless y basada en eventos desplegada en AWS.
 
-**Frontend Mimo:** https://main.d2d9bbvg1i7lcp.amplifyapp.com · [Desarrollo y despliegue](frontend/README.md) · [Verificación](docs/frontend_verificacion.md)
+**Frontend Mimo:** https://main.d2d9bbvg1i7lcp.amplifyapp.com · [Repositorio principal del frontend](https://github.com/Armandorc7/frontend_mimo) · [Verificación del backend](docs/frontend_verificacion.md)
+
+El frontend principal se mantiene en `Armandorc7/frontend_mimo`, con su propio historial y configuración de Amplify. La carpeta `frontend/` de este repositorio conserva la implementación anterior.
 
 ---
 
