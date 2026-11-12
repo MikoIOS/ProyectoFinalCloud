@@ -1,0 +1,114 @@
+service: ms-reclutamiento
+frameworkVersion: '^4.0.0'
+
+provider:
+  name: aws
+  runtime: python3.12
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  environment:
+    TABLE_NAME: hcm-reclutamiento-${sls:stage}
+    CV_BUCKET: hcm-cvs-${sls:stage}-${aws:accountId}
+    # Topic único hcm-eventos (creado y exportado por ms-usuarios)
+    EVENTS_TOPIC_ARN: ${cf:ms-usuarios-${sls:stage}.EventosTopicArn}
+  iam:
+    role: arn:aws:iam::851725431647:role/LabRole
+
+custom:
+  auth:
+    arn: ${cf:ms-usuarios-${sls:stage}.AuthorizerArn}
+    type: token
+    identitySource: method.request.header.Authorization
+    resultTtlInSeconds: 300
+
+functions:
+  crearVacante:
+    handler: handlers/vacantes.crear
+    events:
+      - http: { path: vacantes, method: post, cors: true, authorizer: "${self:custom.auth}" }
+  listarVacantes:
+    handler: handlers/vacantes.listar
+    events:
+      - http: { path: vacantes, method: get, cors: true, authorizer: "${self:custom.auth}" }
+
+  crearPostulacion:
+    handler: handlers/postulaciones.crear
+    events:
+      - http: { path: postulaciones, method: post, cors: true, authorizer: "${self:custom.auth}" }
+  listarPostulaciones:
+    handler: handlers/postulaciones.listar
+    events:
+      - http: { path: "vacantes/{vacante_id}/postulaciones", method: get, cors: true, authorizer: "${self:custom.auth}" }
+  actualizarEstadoPostulacion:
+    handler: handlers/postulaciones.actualizar_estado
+    events:
+      - http: { path: "postulaciones/{postulacion_id}/estado", method: patch, cors: true, authorizer: "${self:custom.auth}" }
+
+  crearTareaOnboarding:
+    handler: handlers/onboarding.crear
+    events:
+      - http: { path: onboarding, method: post, cors: true, authorizer: "${self:custom.auth}" }
+  listarOnboardingEmpleado:
+    handler: handlers/onboarding.listar
+    events:
+      - http: { path: "onboarding/{empleado_id}", method: get, cors: true, authorizer: "${self:custom.auth}" }
+  completarTareaOnboarding:
+    handler: handlers/onboarding.completar
+    events:
+      - http: { path: "onboarding/{empleado_id}/{onboarding_id}", method: patch, cors: true, authorizer: "${self:custom.auth}" }
+
+resources:
+  Resources:
+    ReclutamientoTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: hcm-reclutamiento-${sls:stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+          - AttributeName: vacante_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: vacante-index
+            KeySchema:
+              - AttributeName: tenant_id
+                KeyType: HASH
+              - AttributeName: vacante_id
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+    CVBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: hcm-cvs-${sls:stage}-${aws:accountId}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedMethods: [GET, PUT, POST]
+              AllowedOrigins: ['*']
+              AllowedHeaders: ['*']
+
+    # CORS también en los errores del Authorizer/API Gateway (frontend en Amplify)
+    GatewayResponse4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        RestApiId: !Ref ApiGatewayRestApi
+        ResponseType: DEFAULT_4XX
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+    GatewayResponse5XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        RestApiId: !Ref ApiGatewayRestApi
+        ResponseType: DEFAULT_5XX
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"

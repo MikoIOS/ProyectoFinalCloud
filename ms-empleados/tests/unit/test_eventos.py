@@ -1,4 +1,6 @@
 import json
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -82,7 +84,8 @@ def test_el_empleado_creado_por_evento_se_puede_consultar_y_gestionar(tabla):
 # ---------------------------------------------------------------- Ausencias
 def test_ausencia_aprobada_de_vacaciones_cambia_estado(tabla):
     assert eventos.handler(sqs(evento("AusenciaAprobada", empleado_id="emp-000002", tipo="VACACIONES",
-                                      desde="2026-12-20", hasta="2026-12-27"))) == OK
+                                      desde=datetime.now(ZoneInfo("America/Lima")).date().isoformat(),
+                                      hasta=datetime.now(ZoneInfo("America/Lima")).date().isoformat()))) == OK
     assert fila(tabla, "andina", "emp-000002")["estado"] == "VACACIONES"
     _, lista = respuesta(empleados.listar(http(qs={"estado": "VACACIONES"})))
     assert "emp-000002" in [i["empleado_id"] for i in lista["items"]]
@@ -114,3 +117,14 @@ def test_evento_desconocido_o_sin_tenant(tabla):
     assert eventos.handler(sqs(evento("NominaGenerada", empleado_id="emp-1"))) == OK
     r = eventos.handler(sqs(dict(evento("AusenciaAprobada", empleado_id="emp-000002", tipo="VACACIONES"), tenant_id="")))
     assert len(r["batchItemFailures"]) == 1
+
+
+def test_vacaciones_futuras_no_adelantan_estado(tabla):
+    assert eventos.handler(sqs(evento("AusenciaAprobada", empleado_id="emp-000002", tipo="VACACIONES",
+                                      desde="9998-01-01", hasta="9998-01-10"))) == OK
+    assert fila(tabla, "andina", "emp-000002")["estado"] == "ACTIVO"
+
+
+def test_finalizar_permiso_no_finaliza_vacaciones(tabla):
+    assert eventos.handler(sqs(evento("AusenciaFinalizada", empleado_id="emp-000003", tipo="PERMISO"))) == OK
+    assert fila(tabla, "andina", "emp-000003")["estado"] == "VACACIONES"

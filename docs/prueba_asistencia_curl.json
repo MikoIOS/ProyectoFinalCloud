@@ -1,0 +1,146 @@
+{
+  "etiqueta": "E2E-3ebc5c54358f",
+  "empleado_id": "emp-000002",
+  "fecha_marcacion": "2020-07-13",
+  "fecha_ausencia": "2035-07-14",
+  "ausencia_id": "aus-f42475c6470d4fb7b52e0e2c3ada3138",
+  "permiso_id": "aus-25294cbd701848248b0d31fb142cd925",
+  "checks": [
+    {
+      "prueba": "Login admin",
+      "http": 200
+    },
+    {
+      "prueba": "Login emp",
+      "http": 200
+    },
+    {
+      "prueba": "Login pacifico",
+      "http": 200
+    },
+    {
+      "prueba": "Ping",
+      "http": 200
+    },
+    {
+      "prueba": "Sin token",
+      "http": 401
+    },
+    {
+      "prueba": "Empleado no marca para otro",
+      "http": 403
+    },
+    {
+      "prueba": "Empleado no altera hora",
+      "http": 403
+    },
+    {
+      "prueba": "Entrada manual RRHH",
+      "http": 201
+    },
+    {
+      "prueba": "Entrada duplicada",
+      "http": 409
+    },
+    {
+      "prueba": "Salida antes de entrada",
+      "http": 400
+    },
+    {
+      "prueba": "Salida y horas",
+      "http": 201
+    },
+    {
+      "prueba": "Salida duplicada",
+      "http": 409
+    },
+    {
+      "prueba": "Historial propio",
+      "http": 200
+    },
+    {
+      "prueba": "Historial aislado Pacífico",
+      "http": 200
+    },
+    {
+      "prueba": "Historial ajeno prohibido",
+      "http": 403
+    },
+    {
+      "prueba": "Resumen diario",
+      "http": 200
+    },
+    {
+      "prueba": "Reporte CSV",
+      "http": 200
+    },
+    {
+      "prueba": "Reporte solo supervisor",
+      "http": 403
+    },
+    {
+      "prueba": "Saldo vacaciones",
+      "http": 200
+    },
+    {
+      "prueba": "Body inválido",
+      "http": 400
+    },
+    {
+      "prueba": "Solicitar ausencia",
+      "http": 201
+    },
+    {
+      "prueba": "Cruce de ausencias",
+      "http": 409
+    },
+    {
+      "prueba": "Consulta propia",
+      "http": 200
+    },
+    {
+      "prueba": "Consulta desde Pacífico",
+      "http": 404
+    },
+    {
+      "prueba": "Pendientes RRHH",
+      "http": 200
+    },
+    {
+      "prueba": "No autoaprobar",
+      "http": 403
+    },
+    {
+      "prueba": "No aprobar desde otro tenant",
+      "http": 404
+    },
+    {
+      "prueba": "Aprobar RRHH",
+      "http": 200
+    },
+    {
+      "prueba": "Doble aprobación",
+      "http": 409
+    },
+    {
+      "prueba": "No finalizar anticipadamente",
+      "http": 409
+    },
+    {
+      "prueba": "Permiso histórico demo",
+      "http": 201
+    },
+    {
+      "prueba": "Aprobar permiso",
+      "http": 200
+    },
+    {
+      "prueba": "Finalizar permiso",
+      "http": 200
+    },
+    {
+      "prueba": "EDA notificación y nómina",
+      "http": 200
+    }
+  ]
+}

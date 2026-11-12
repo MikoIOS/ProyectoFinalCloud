@@ -1,0 +1,19 @@
+{
+  "fecha": "2026-11-09T23:21:51.195310+00:00",
+  "cuentas": [
+    {
+      "user_id": "usr-000003",
+      "tenant_id": "andina",
+      "rol": "gerente",
+      "activo": true,
+      "login_http": 200
+    },
+    {
+      "user_id": "usr-000004",
+      "tenant_id": "andina",
+      "rol": "reclutador",
+      "activo": true,
+      "login_http": 200
+    }
+  ]
+}

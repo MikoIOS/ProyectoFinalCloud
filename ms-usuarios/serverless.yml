@@ -1,6 +1,6 @@
 service: ms-usuarios
 
-frameworkVersion: ">=3"
+frameworkVersion: "4"
 
 plugins:
   - serverless-python-requirements
@@ -105,6 +105,10 @@ resources:
           - { AttributeName: tenant_id, KeyType: HASH }
           - { AttributeName: user_id,   KeyType: RANGE }
         GlobalSecondaryIndexes:
+          - IndexName: login-email-index
+            KeySchema:
+              - { AttributeName: email, KeyType: HASH }
+            Projection: { ProjectionType: KEYS_ONLY }
           - IndexName: email-index
             KeySchema:
               - { AttributeName: tenant_id, KeyType: HASH }

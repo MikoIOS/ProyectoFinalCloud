@@ -52,12 +52,61 @@ def test_aislamiento_entre_tenants(tabla):
     assert decode_token(body["token"])["rol"] == "gerente"
 
 
-def test_campos_faltantes_400(tabla):
+def test_tenant_opcional_y_campos_obligatorios(tabla):
     r = auth.login({"body": json.dumps({"email": "maria@andina.pe", "password": PWD})})
-    assert r["statusCode"] == 400
+    assert r["statusCode"] == 200
     assert auth.login({})["statusCode"] == 400
     assert auth.login({"body": "no-es-json"})["statusCode"] == 400
 
 
 def test_ping(tabla):
     assert json.loads(auth.ping({})["body"])["status"] == "ok"
+
+
+def test_login_sin_empresa_resuelve_cuenta_en_bd(tabla):
+    for email, tenant in [("  MARIA@ANDINA.PE ", "andina"), ("maria@pacifico.pe", "pacifico")]:
+        status, body = llamar(None, email, PWD)
+        assert status == 200
+        assert decode_token(body["token"])["tenant_id"] == tenant
+
+
+def test_login_no_deduce_empresa_del_dominio(tabla):
+    from tests.unit.conftest import usuario
+    from src.common.security import hash_password
+    tabla.put_item(Item=usuario("sierra", 9, "persona@gmail.com", pwd_hash=hash_password(PWD)))
+    status, body = llamar(None, "persona@gmail.com", PWD)
+    assert status == 200
+    assert decode_token(body["token"])["tenant_id"] == "sierra"
+
+
+def test_correo_ambiguo_no_elige_empresa(tabla):
+    from tests.unit.conftest import usuario
+    from src.common.security import hash_password
+    tabla.put_item(Item=usuario("pacifico", 9, "maria@andina.pe", pwd_hash=hash_password(PWD)))
+    status, body = llamar(None, "maria@andina.pe", PWD)
+    assert status == 401
+    assert body["error"]["mensaje"] == "Credenciales inválidas"
+
+
+def test_sin_empresa_respeta_credenciales_y_desactivacion(tabla):
+    assert llamar(None, "maria@andina.pe", "incorrecta")[0] == 401
+    assert llamar(None, "nadie@andina.pe", PWD)[0] == 401
+    assert llamar(None, "luis@andina.pe", PWD)[0] == 403
+
+
+def test_tipos_invalidos_no_producen_500(tabla):
+    for tenant in ["", " ", 123, {}, []]:
+        assert llamar(tenant, "maria@andina.pe", PWD)[0] == 400
+    for email, password in [(None, PWD), ([], PWD), ("maria@andina.pe", None)]:
+        assert llamar(None, email, password)[0] == 400
+
+
+def test_indice_desactualizado_no_autentica_con_correo_anterior(tabla, monkeypatch):
+    from unittest.mock import Mock
+    from src.repositories import usuarios_repo
+    table = Mock()
+    table.query.return_value = {"Items": [{"tenant_id": "andina", "user_id": "usr-000001"}]}
+    table.get_item.return_value = {"Item": {"email": "nuevo@andina.pe"}}
+    monkeypatch.setattr(usuarios_repo, "_table", lambda: table)
+    assert usuarios_repo.get_by_login_email("anterior@andina.pe") is None
+    assert table.get_item.call_args.kwargs["ConsistentRead"] is True

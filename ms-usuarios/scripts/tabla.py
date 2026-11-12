@@ -17,6 +17,9 @@ def crear_tabla(dynamodb, nombre="hcm-usuarios"):
             {"AttributeName": "user_id", "KeyType": "RANGE"},
         ],
         GlobalSecondaryIndexes=[
+            {"IndexName": "login-email-index",
+             "KeySchema": [{"AttributeName": "email", "KeyType": "HASH"}],
+             "Projection": {"ProjectionType": "KEYS_ONLY"}},
             {"IndexName": "email-index",
              "KeySchema": [{"AttributeName": "tenant_id", "KeyType": "HASH"},
                            {"AttributeName": "email", "KeyType": "RANGE"}],

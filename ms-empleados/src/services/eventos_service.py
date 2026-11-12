@@ -1,5 +1,7 @@
 """Reacciones a eventos del topic hcm-eventos. Todas son idempotentes (SQS entrega 'al menos una vez')."""
 import logging
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from src.common import events
 from src.common.errors import Conflicto, Validacion
@@ -41,6 +43,10 @@ def ausencia_aprobada(evt):
     tenant, empleado_id = _tenant(evt), _empleado_id(evt)
     if (evt.get("datos") or {}).get("tipo") != "VACACIONES":
         return  # permisos sin goce, etc.: no cambian el estado
+    datos = evt.get("datos") or {}
+    hoy = datetime.now(ZoneInfo("America/Lima")).date().isoformat()
+    if datos.get("desde") and datos.get("hasta") and not datos["desde"] <= hoy <= datos["hasta"]:
+        return  # ms-asistencia vuelve a publicar al comenzar las vacaciones.
     actual = repo.get(tenant, empleado_id)
     if not actual or actual["estado"] != "ACTIVO":
         log.info("AusenciaAprobada ignorada para %s (%s)", empleado_id, actual and actual["estado"])
@@ -52,8 +58,10 @@ def ausencia_aprobada(evt):
 
 
 def ausencia_finalizada(evt):
-    """Propuesta (por confirmar con ms-asistencia): devuelve a ACTIVO a quien volvió de vacaciones."""
+    """Devuelve a ACTIVO a quien volvió de vacaciones, sin alterar cesados ni permisos."""
     tenant, empleado_id = _tenant(evt), _empleado_id(evt)
+    if (evt.get("datos") or {}).get("tipo", "VACACIONES") != "VACACIONES":
+        return
     actual = repo.get(tenant, empleado_id)
     if not actual or actual["estado"] != "VACACIONES":
         return

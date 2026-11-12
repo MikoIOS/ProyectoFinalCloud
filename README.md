@@ -1,0 +1,182 @@
+# Proyecto Final – CS2032 Cloud Computing (2026-2)
+
+**Grupo 2 · SaaS tipo HCM (Human Capital Management)**
+Plataforma multi-tenant, serverless y basada en eventos desplegada en AWS.
+
+**Frontend Mimo:** https://main.d2d9bbvg1i7lcp.amplifyapp.com · [Desarrollo y despliegue](frontend/README.md) · [Verificación](docs/frontend_verificacion.md)
+
+---
+
+## 1. Resumen del proyecto
+
+Solución SaaS para gestionar **empleados, nóminas, talento, contratación y desempeño**, con aislamiento por tenant.
+
+| Requisito del enunciado | Cómo lo cumpliremos |
+|---|---|
+| Multi-tenancy | `tenant_id` en cada registro/token; 3 tenants de prueba |
+| Serverless | API Gateway + Lambda, desplegado con Serverless Framework |
+| Basada en eventos (EDA) | SNS (publicación) + SQS (consumo) entre microservicios |
+| ≥ 5 microservicios protegidos | Autorizador (Lambda authorizer / Cognito) en cada API |
+| BD propia por microservicio | DynamoDB (estructura JSON documentada por servicio) |
+| ≥ 30,000 registros por microservicio | Script de datos ficticios, repartidos en 3 tenants |
+| S3, SNS, SQS | S3 (CVs, boletas de pago, reportes), SNS + SQS (eventos) |
+| Frontend | Framework a elección, desplegado en AWS Amplify |
+| Demo | Con 2 tenants distintos |
+
+### Microservicios propuestos
+
+1. **ms-usuarios** – autenticación, usuarios y roles por tenant
+2. **ms-empleados** – Core HR: ficha del empleado, áreas, cargos y organigrama
+3. **ms-nominas** – planillas, boletas, bonos y bandas salariales
+4. **ms-asistencia** – marcaciones, vacaciones y permisos
+5. **ms-reclutamiento** – vacantes, postulantes y onboarding
+6. **ms-desempeno** – evaluaciones, objetivos y reconocimientos
+7. **ms-notificaciones** – consume eventos (SQS) y notifica (SNS)
+
+> Alineado con los ejemplos del enunciado: SAP HCM, BambooHR y Workday. Detalle en `FASE1_DISENO.md`.
+
+> Ajustable según lo que decida el grupo en la Fase 1.
+
+---
+
+## 2. Equipo (6 integrantes)
+
+| # | Integrante | Rol principal | Responsabilidades |
+|---|---|---|---|
+| 1 | Miguel Espinoza | Líder técnico / DevOps | Arquitectura, `serverless.yml`, CI/CD, Amplify, IAM |
+| 2 | Fernando Espinoza | Backend A | ms-usuarios (auth) + ms-empleados |
+| 3 | Rodrigo Miguel Gomez Pacheco | Backend B | ms-nominas + ms-asistencia |
+| 4 | Luciano Matias Sanchez Goicochea | Backend C | ms-reclutamiento + ms-desempeno |
+| 5 | Armando Ruesta | Frontend | UI, integración con APIs, login multi-tenant |
+| 6 | Brhandon Gutierrez | Datos / QA / Documentación | ms-notificaciones (SNS/SQS), datos ficticios (30k/servicio), pruebas, informe y PPT |
+
+> Los integrantes 5 y 6 aún no deciden quién hará **Frontend** y quién **Datos / QA / Documentación**.
+
+---
+
+## 3. Fechas clave
+
+| Fecha | Hito |
+|---|---|
+| **Sáb 14-Nov-2026** | Exposición virtual con ACL: avance proporcional al **30%** (3 pts) |
+| **Dom 22-Nov-2026, 23:59** | Entrega en Canvas: informe (Word/PDF) + PPT |
+| **Semana 16** | Exposición presencial + demo (obligatoria; sin ella la nota máxima es 10) |
+
+**Rúbrica:** Diagrama de arquitectura (2) · BackEnd (8) · FrontEnd (6) · Exposición presencial (1) · Exposición virtual ACL (3)
+
+---
+
+## 4. Fases del trabajo
+
+### Fase 0 – Organización (22 – 25 Oct)
+- [ ] Crear repositorios (uno por microservicio + frontend + infra) y hacerlos públicos
+- [ ] Definir tablero de tareas y reunión fija semanal
+- [ ] Asignar roles (sección 2) y convención de ramas/commits
+- [ ] Cuenta AWS compartida, usuarios IAM y región única
+
+**Entregable:** repos creados, roles asignados, tablero activo.
+
+### Fase 1 – Diseño y arquitectura (26 Oct – 1 Nov)
+- [ ] Definir funcionalidades HCM por microservicio
+- [ ] Estrategia multi-tenant (tenant en token, claves y particiones DynamoDB)
+- [ ] Estructura JSON de cada tabla (documentar para el informe)
+- [ ] Catálogo de eventos SNS/SQS (quién publica, quién consume)
+- [ ] **Diagrama de Arquitectura de Solución** (2 pts)
+- [ ] Mockups del frontend
+
+**Entregable:** diagrama de arquitectura, modelo de datos, lista de eventos.
+
+### Fase 2 – Base de infraestructura (2 – 8 Nov)
+- [ ] Plantilla común de Serverless Framework (stages, tablas, permisos)
+- [ ] Autenticación y autorizador reutilizable para todos los APIs
+- [ ] ms-usuarios y ms-empleados funcionando con tenant aislado
+- [x] Esqueleto del frontend con login, desplegado en Amplify
+- [ ] Script generador de datos ficticios (3 tenants)
+
+**Entregable:** 2 microservicios desplegados + login funcional.
+
+### Fase 3 – Hito 30% y exposición virtual (9 – 14 Nov)
+- [ ] Consolidar lo avanzado (≥ 30% del proyecto) y preparar demo corta
+- [ ] Probar flujo extremo a extremo con 1–2 tenants
+- [ ] Preparar presentación para la exposición virtual con ACL del **14-Nov**
+
+**Entregable:** avance demostrable + exposición virtual.
+
+### Fase 4 – Resto del backend y EDA (15 – 18 Nov)
+- [ ] ms-nominas, ms-asistencia, ms-reclutamiento, ms-desempeno, ms-notificaciones
+- [ ] Integración SNS → SQS → Lambda consumidoras
+- [ ] S3 para CVs, boletas de pago y reportes
+- [ ] Carga de **≥ 30,000 registros por microservicio** en 3 tenants
+
+**Entregable:** los 5+ microservicios desplegados y comunicándose por eventos.
+
+### Fase 5 – Frontend e integración (17 – 20 Nov)
+- [x] Pantallas: empleados, nóminas, asistencia y ausencias, vacantes y onboarding, evaluaciones de desempeño, dashboard, portal del empleado
+- [x] Consumo de todas las APIs con token y tenant
+- [ ] Pruebas con 2 tenants (verificar aislamiento de datos)
+- [x] Corrección de errores y manejo de fallos
+
+**Entregable:** aplicación completa funcionando en Amplify.
+
+### Fase 6 – Documentación y entrega (19 – 22 Nov)
+- [ ] **Informe** (Word/PDF): evidencias, enlaces públicos a repos, diseño de BD de cada microservicio
+- [ ] **PPT** resumen con todo lo solicitado
+- [ ] Capturas/evidencias de despliegue, datos y eventos
+- [ ] Subir a Canvas antes del **22-Nov 23:59** (no dejar para último minuto)
+
+**Entregable:** informe + PPT en Canvas.
+
+### Fase 7 – Exposición presencial (Semana 16)
+- [ ] Ensayo general con la demo de **2 tenants**
+- [ ] Definir quién presenta qué (asistencia de todos es obligatoria)
+- [ ] Plan B: video de la demo y datos precargados por si falla la red
+
+---
+
+## 5. Checklist final de entrega
+
+- [ ] Diagrama de arquitectura de solución
+- [x] ≥ 5 microservicios serverless protegidos (API Gateway + Lambda)
+- [ ] Una BD por microservicio, con diseño documentado
+- [x] ≥ 30,000 registros por microservicio en 3 tenants
+- [x] S3, SNS y SQS en uso
+- [ ] Despliegue 100% automatizado con Serverless Framework
+- [x] Frontend en Amplify
+- [ ] Demo con 2 tenants
+- [ ] Informe (Word/PDF) con enlaces públicos a repositorios
+- [ ] PPT resumen
+- [ ] Entrega en Canvas antes del 22-Nov-2026 23:59
+
+---
+
+## 6. Convenciones del equipo
+
+- Ramas: `main` (estable), `dev` (integración), `feature/<nombre>`
+- Commits cortos y descriptivos; Pull Request revisado por al menos 1 persona
+- Nunca subir credenciales de AWS al repositorio (usar variables de entorno / SSM)
+- Un mismo `stage` de pruebas compartido; cada quien usa su propio stage para desarrollar
+
+---
+
+## 7. Estado de despliegue (dev)
+
+Servicios backend desplegados y con datos de prueba:
+
+| Microservicio | Tabla DynamoDB | Registros | API (dev) |
+|---|---|---:|---|
+| ms-usuarios | `hcm-usuarios` | 30,009 | `https://ckuqmvszfj.execute-api.us-east-1.amazonaws.com/dev` |
+| ms-empleados | `hcm-empleados` | 30,005 | Ver colección Postman `postman/ms-empleados-dev.postman_collection.json` |
+| ms-reclutamiento | `hcm-reclutamiento-dev` | 30,463 | `https://ts3pqiwi7e.execute-api.us-east-1.amazonaws.com/dev` |
+| ms-desempeno | `hcm-desempeno-dev` | 30,009 | `https://4gchww17uh.execute-api.us-east-1.amazonaws.com/dev` |
+| ms-notificaciones | `hcm-notificaciones-dev` | 30,321 | Ver colección Postman `postman/ms-notificaciones-dev.postman_collection.json` |
+| **ms-nominas** | **`hcm-nominas-dev`** | **40,508** | **`https://0f0k9vomdk.execute-api.us-east-1.amazonaws.com/dev`** |
+| **ms-asistencia** | **`hcm-asistencia-dev`** | **30,004** | `https://p79musr10g.execute-api.us-east-1.amazonaws.com/dev` |
+
+- El detalle de `ms-nominas` (endpoints, eventos, seed y pruebas) está en `ms-nominas/README.md`.
+- La auditoría de volumen se genera con `python3 scripts/auditoria_bd.py --output docs/metricas_bd.md`; el reporte actual está en `docs/metricas_bd.md`.
+- La colección Postman de nóminas está en `postman/ms-nominas-dev.postman_collection.json`.
+- Prueba EDA de evaluación → notificación aprobada en dev: evidencia y pasos para repetir en [docs/prueba_eda.md](docs/prueba_eda.md).
+- `ms-asistencia` desplegado: [API y reglas](ms-asistencia/README.md), [evidencia de 34 comprobaciones curl](docs/prueba_asistencia.md) y [colección Postman](postman/ms-asistencia-dev.postman_collection.json). Flujo SIN_GOCE → notificación y concepto de nómina verificado.
+- Alarmas EDA: [25 alarmas desplegadas](monitorizacion/README.md), con [prueba de alerta y recuperación en AWS](docs/prueba_alarmas.md) y entregas SNS verificadas. Los consumidores de usuarios y empleados se [recuperaron](docs/recuperacion_consumidores_eda.md): 7 mensajes procesados y 25 alarmas en OK.
+- Las cuentas demo de gerente y reclutador de Andina están [reactivadas y con login verificado](docs/reactivacion_cuentas_demo.json).
+- Boletas: [archivado privado en S3 y descarga verificada con dos tenants](docs/prueba_boletas_s3.md).

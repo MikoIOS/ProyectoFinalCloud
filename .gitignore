@@ -1,0 +1,30 @@
+# IDE / editores
+.idea/
+*.iml
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Node / Serverless / AWS SAM
+node_modules/
+dist/
+.wde/
+audit-results/
+playwright-report/
+test-results/
+.serverless/
+.aws-sam/
+
+# Variables de entorno y secretos
+.env
+.env.*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

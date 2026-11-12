@@ -1,0 +1,748 @@
+{
+  "info": {
+    "name": "ms-nominas · HCM API (dev)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Nóminas: generación asíncrona, consultas, boletas PDF, conceptos y bandas salariales. Ejecuta '00 Auth > Login admin andina' para cargar {{token}}. El tenant sale del JWT; no envíes tenant_id en el body."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://0f0k9vomdk.execute-api.us-east-1.amazonaws.com/dev"
+    },
+    {
+      "key": "login_url",
+      "value": "https://ckuqmvszfj.execute-api.us-east-1.amazonaws.com/dev"
+    },
+    {
+      "key": "tenant_id",
+      "value": "andina"
+    },
+    {
+      "key": "email",
+      "value": "admin@andina.pe"
+    },
+    {
+      "key": "password",
+      "value": "Demo1234!"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "periodo",
+      "value": "2026-11"
+    },
+    {
+      "key": "empleado_id",
+      "value": "emp-000001"
+    },
+    {
+      "key": "nomina_id",
+      "value": "nom-2026-11-emp-000001"
+    },
+    {
+      "key": "concepto_id",
+      "value": ""
+    },
+    {
+      "key": "token_empleado",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Auth",
+      "item": [
+        {
+          "name": "Login admin andina (set token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json();",
+                  "if(j.token){pm.collectionVariables.set('token',j.token);}",
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login empleado andina (set token_empleado)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"empleado@andina.pe\",\n  \"password\": \"Demo1234!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json();",
+                  "if(j.token){pm.collectionVariables.set('token_empleado',j.token);}",
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 Generación y planillas",
+      "item": [
+        {
+          "name": "Generar planilla (async)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nominas/generar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nominas",
+                "generar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"periodo\": \"{{periodo}}\",\n  \"notificar\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Encola el trabajo en SQS. Si la planilla ya existe, responde 409; usa \"forzar\": true para recalcular."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('202 o 409',()=>pm.expect([202,409]).to.include(pm.response.code));",
+                  "const j=pm.response.json();",
+                  "if(j.ejecucion_id){pm.collectionVariables.set('ejecucion_id',j.ejecucion_id);}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resumen del periodo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nominas/resumen?periodo={{periodo}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nominas",
+                "resumen"
+              ],
+              "query": [
+                {
+                  "key": "periodo",
+                  "value": "{{periodo}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar planillas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nominas/planillas?limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nominas",
+                "planillas"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener planilla",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nominas/planillas/{{periodo}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nominas",
+                "planillas",
+                "{{periodo}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Estado de planilla (polling)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nominas/planillas/{{periodo}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nominas",
+                "planillas",
+                "{{periodo}}"
+              ]
+            },
+            "description": "Repite hasta que estado sea GENERADA o FALLIDA."
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Nóminas y boletas",
+      "item": [
+        {
+          "name": "Listar nóminas del periodo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nominas?periodo={{periodo}}&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nominas"
+              ],
+              "query": [
+                {
+                  "key": "periodo",
+                  "value": "{{periodo}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nóminas de un empleado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nominas/empleado/{{empleado_id}}?limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nominas",
+                "empleado",
+                "{{empleado_id}}"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalle de nómina",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nominas/{{nomina_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nominas",
+                "{{nomina_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Boleta como JSON base64",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nominas/{{nomina_id}}/boleta?formato=json",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nominas",
+                "{{nomina_id}}",
+                "boleta"
+              ],
+              "query": [
+                {
+                  "key": "formato",
+                  "value": "json"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200',()=>pm.response.to.have.status(200));",
+                  "const j=pm.response.json();",
+                  "pm.test('PDF base64',()=>pm.expect(atob(j.contenido_base64).startsWith('%PDF')).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Boleta PDF binario",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/pdf"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nominas/{{nomina_id}}/boleta",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nominas",
+                "{{nomina_id}}",
+                "boleta"
+              ]
+            },
+            "description": "API Gateway solo decodifica el PDF si envías Accept: application/pdf. Para Postman usa la variante JSON base64."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200',()=>pm.response.to.have.status(200));",
+                  "pm.test('content-type pdf',()=>pm.expect(pm.response.headers.get('Content-Type')).to.include('application/pdf'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Conceptos",
+      "item": [
+        {
+          "name": "Crear concepto manual",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nominas/conceptos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nominas",
+                "conceptos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empleado_id\": \"{{empleado_id}}\",\n  \"periodo\": \"{{periodo}}\",\n  \"tipo\": \"BONO\",\n  \"concepto\": \"Bono de prueba Postman\",\n  \"monto\": 250\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201',()=>pm.response.to.have.status(201));",
+                  "const j=pm.response.json();",
+                  "if(j.concepto_id){pm.collectionVariables.set('concepto_id',j.concepto_id);}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar conceptos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nominas/conceptos?periodo={{periodo}}&empleado_id={{empleado_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nominas",
+                "conceptos"
+              ],
+              "query": [
+                {
+                  "key": "periodo",
+                  "value": "{{periodo}}"
+                },
+                {
+                  "key": "empleado_id",
+                  "value": "{{empleado_id}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 Bandas salariales",
+      "item": [
+        {
+          "name": "Listar bandas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bandas?limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bandas"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Guardar banda",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bandas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bandas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cargo\": \"Analista de Prueba Postman\",\n  \"minimo\": 2500,\n  \"maximo\": 5500,\n  \"moneda\": \"PEN\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

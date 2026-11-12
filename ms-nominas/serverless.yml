@@ -1,0 +1,281 @@
+service: ms-nominas
+frameworkVersion: "4"
+
+# Requisito: ms-usuarios desplegado antes (exporta AuthorizerArn y EventosTopicArn).
+custom:
+  auth:
+    arn: ${cf:ms-usuarios-${sls:stage}.AuthorizerArn}
+    type: token
+    identitySource: method.request.header.Authorization
+    resultTtlInSeconds: 300
+  topicArn: ${cf:ms-usuarios-${sls:stage}.EventosTopicArn}
+
+package:
+  patterns:
+    - "!tests/**"
+    - "!scripts/**"
+    - "!postman/**"
+    - "!.venv/**"
+    - "!__pycache__/**"
+    - "!**/__pycache__/**"
+
+provider:
+  name: aws
+  runtime: python3.12
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  timeout: 29
+  iam:
+    role: arn:aws:iam::851725431647:role/LabRole
+  apiGateway:
+    binaryMediaTypes:
+      - application/pdf
+  environment:
+    TABLE_NAME: hcm-nominas-${sls:stage}
+    TABLE_EMPLEADOS: hcm-empleados
+    TOPIC_ARN: ${self:custom.topicArn}
+    TRABAJOS_QUEUE_URL: !Ref ColaTrabajos
+    TASA_PENSION: "0.13"
+    TASA_ESSALUD: "0.09"
+    BOLETAS_BUCKET: !Ref BoletasBucket
+
+functions:
+  # --- Nóminas / planillas ---
+  generar:
+    handler: src/handlers/nominas.generar
+    events:
+      - http: { path: nominas/generar, method: post, cors: true, authorizer: "${self:custom.auth}" }
+  listarNominas:
+    handler: src/handlers/nominas.listar
+    events:
+      - http: { path: nominas, method: get, cors: true, authorizer: "${self:custom.auth}" }
+  resumenNominas:
+    handler: src/handlers/nominas.resumen
+    events:
+      - http: { path: nominas/resumen, method: get, cors: true, authorizer: "${self:custom.auth}" }
+  listarPlanillas:
+    handler: src/handlers/nominas.planillas
+    events:
+      - http: { path: nominas/planillas, method: get, cors: true, authorizer: "${self:custom.auth}" }
+  obtenerPlanilla:
+    handler: src/handlers/nominas.planilla
+    events:
+      - http: { path: "nominas/planillas/{periodo}", method: get, cors: true, authorizer: "${self:custom.auth}" }
+  nominasEmpleado:
+    handler: src/handlers/nominas.empleado
+    events:
+      - http: { path: "nominas/empleado/{empleado_id}", method: get, cors: true, authorizer: "${self:custom.auth}" }
+  liquidacionEmpleado:
+    handler: src/handlers/nominas.liquidacion
+    events:
+      - http: { path: "nominas/liquidaciones/{empleado_id}", method: get, cors: true, authorizer: "${self:custom.auth}" }
+  obtenerNomina:
+    handler: src/handlers/nominas.detalle
+    events:
+      - http: { path: "nominas/{nomina_id}", method: get, cors: true, authorizer: "${self:custom.auth}" }
+  boleta:
+    handler: src/handlers/nominas.boleta
+    events:
+      - http: { path: "nominas/{nomina_id}/boleta", method: get, cors: true, authorizer: "${self:custom.auth}" }
+
+  # --- Conceptos y bandas ---
+  crearConcepto:
+    handler: src/handlers/conceptos.crear
+    events:
+      - http: { path: nominas/conceptos, method: post, cors: true, authorizer: "${self:custom.auth}" }
+  listarConceptos:
+    handler: src/handlers/conceptos.listar
+    events:
+      - http: { path: nominas/conceptos, method: get, cors: true, authorizer: "${self:custom.auth}" }
+  listarBandas:
+    handler: src/handlers/bandas.listar
+    events:
+      - http: { path: bandas, method: get, cors: true, authorizer: "${self:custom.auth}" }
+  guardarBanda:
+    handler: src/handlers/bandas.guardar
+    events:
+      - http: { path: bandas, method: put, cors: true, authorizer: "${self:custom.auth}" }
+
+  # --- Procesamiento asíncrono ---
+  procesarPlanilla:
+    handler: src/handlers/worker.handler
+    timeout: 900
+    events:
+      - sqs:
+          arn: !GetAtt ColaTrabajos.Arn
+          batchSize: 1
+          functionResponseType: ReportBatchItemFailures
+  procesarEventos:
+    handler: src/handlers/eventos.handler
+    timeout: 60
+    events:
+      - sqs:
+          arn: !GetAtt ColaEventos.Arn
+          batchSize: 5
+          functionResponseType: ReportBatchItemFailures
+
+resources:
+  Resources:
+    BoletasBucket:
+      Type: AWS::S3::Bucket
+      DeletionPolicy: Retain
+      UpdateReplacePolicy: Retain
+      Properties:
+        BucketName: hcm-boletas-${sls:stage}-${aws:accountId}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+        OwnershipControls:
+          Rules:
+            - ObjectOwnership: BucketOwnerEnforced
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                SSEAlgorithm: AES256
+        VersioningConfiguration:
+          Status: Enabled
+    BoletasBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref BoletasBucket
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: SoloHTTPS
+              Effect: Deny
+              Principal: '*'
+              Action: 's3:*'
+              Resource:
+                - !GetAtt BoletasBucket.Arn
+                - !Sub '${BoletasBucket.Arn}/*'
+              Condition:
+                Bool:
+                  aws:SecureTransport: 'false'
+    NominaTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: hcm-nominas-${sls:stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - { AttributeName: tenant_id, AttributeType: S }
+          - { AttributeName: sk, AttributeType: S }
+          - { AttributeName: empleado_periodo, AttributeType: S }
+          - { AttributeName: periodo_empleado, AttributeType: S }
+          - { AttributeName: periodo_concepto, AttributeType: S }
+          - { AttributeName: periodo_planilla, AttributeType: S }
+          - { AttributeName: banda_cargo, AttributeType: S }
+        KeySchema:
+          - { AttributeName: tenant_id, KeyType: HASH }
+          - { AttributeName: sk, KeyType: RANGE }
+        GlobalSecondaryIndexes:
+          - IndexName: empleado-index
+            KeySchema:
+              - { AttributeName: tenant_id, KeyType: HASH }
+              - { AttributeName: empleado_periodo, KeyType: RANGE }
+            Projection: { ProjectionType: ALL }
+          - IndexName: periodo-index
+            KeySchema:
+              - { AttributeName: tenant_id, KeyType: HASH }
+              - { AttributeName: periodo_empleado, KeyType: RANGE }
+            Projection: { ProjectionType: ALL }
+          - IndexName: concepto-index
+            KeySchema:
+              - { AttributeName: tenant_id, KeyType: HASH }
+              - { AttributeName: periodo_concepto, KeyType: RANGE }
+            Projection: { ProjectionType: ALL }
+          - IndexName: planilla-index
+            KeySchema:
+              - { AttributeName: tenant_id, KeyType: HASH }
+              - { AttributeName: periodo_planilla, KeyType: RANGE }
+            Projection: { ProjectionType: ALL }
+          - IndexName: cargo-index
+            KeySchema:
+              - { AttributeName: tenant_id, KeyType: HASH }
+              - { AttributeName: banda_cargo, KeyType: RANGE }
+            Projection: { ProjectionType: ALL }
+
+    # --- Cola de trabajos de generación (una planilla por mensaje) ---
+    ColaTrabajosDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ms-nominas-trabajos-dlq
+        MessageRetentionPeriod: 1209600
+    ColaTrabajos:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ms-nominas-trabajos
+        VisibilityTimeout: 900
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt ColaTrabajosDLQ.Arn
+          maxReceiveCount: 3
+
+    # --- Cola de eventos del topic hcm-eventos ---
+    ColaEventosDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ms-nominas-eventos-dlq
+        MessageRetentionPeriod: 1209600
+    ColaEventos:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ms-nominas-eventos
+        VisibilityTimeout: 90
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt ColaEventosDLQ.Arn
+          maxReceiveCount: 3
+    ColaEventosPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues: [!Ref ColaEventos]
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal: { Service: sns.amazonaws.com }
+              Action: sqs:SendMessage
+              Resource: !GetAtt ColaEventos.Arn
+              Condition:
+                ArnEquals: { "aws:SourceArn": "${self:custom.topicArn}" }
+    SuscripcionEventos:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: ${self:custom.topicArn}
+        Protocol: sqs
+        Endpoint: !GetAtt ColaEventos.Arn
+        RawMessageDelivery: true
+        FilterPolicyScope: MessageBody
+        FilterPolicy:
+          tipo_evento: [AusenciaAprobada, EmpleadoCesado]
+
+    # CORS también en los errores del Authorizer/API Gateway (frontend en Amplify)
+    GatewayResponse4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        RestApiId: !Ref ApiGatewayRestApi
+        ResponseType: DEFAULT_4XX
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+    GatewayResponse5XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        RestApiId: !Ref ApiGatewayRestApi
+        ResponseType: DEFAULT_5XX
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+
+  Outputs:
+    BoletasBucketName:
+      Value: !Ref BoletasBucket
+    NominaTableName:
+      Value: !Ref NominaTable
+      Export: { Name: "${self:service}-${sls:stage}-TableName" }
+    ColaTrabajosUrl:
+      Value: !Ref ColaTrabajos
+      Export: { Name: "${self:service}-${sls:stage}-TrabajosQueueUrl" }
+    ColaEventosArn:
+      Value: !GetAtt ColaEventos.Arn
+      Export: { Name: "${self:service}-${sls:stage}-EventosQueueArn" }

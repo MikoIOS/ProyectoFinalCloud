@@ -1,0 +1,407 @@
+{
+  "info": {
+    "name": "ms-reclutamiento · HCM API (dev)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Reclutamiento: vacantes, postulaciones (CV a S3) y onboarding. Requiere Bearer token (Authorizer compartido): ejecuta '00 Auth > Login admin andina' para setear {{token}}. El tenant sale del JWT; no enviar tenant_id."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://ts3pqiwi7e.execute-api.us-east-1.amazonaws.com/dev"
+    },
+    {
+      "key": "vacante_id",
+      "value": ""
+    },
+    {
+      "key": "postulacion_id",
+      "value": ""
+    },
+    {
+      "key": "empleado_id",
+      "value": "emp-000001"
+    },
+    {
+      "key": "onboarding_id",
+      "value": ""
+    },
+    {
+      "key": "login_url",
+      "value": "https://ckuqmvszfj.execute-api.us-east-1.amazonaws.com/dev"
+    },
+    {
+      "key": "tenant_id",
+      "value": "andina"
+    },
+    {
+      "key": "email",
+      "value": "admin@andina.pe"
+    },
+    {
+      "key": "password",
+      "value": "Demo1234!"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Auth",
+      "item": [
+        {
+          "name": "Login admin andina (set token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{login_url}}/auth/login",
+              "host": [
+                "{{login_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json();",
+                  "if(j.token){pm.collectionVariables.set('token',j.token);}",
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 Vacantes",
+      "item": [
+        {
+          "name": "Crear vacante",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vacantes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vacantes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Backend Developer\",\n  \"area\": \"Tecnología\",\n  \"descripcion\": \"Python/AWS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json(); if(j.vacante_id){pm.collectionVariables.set('vacante_id',j.vacante_id);}",
+                  "pm.test('201',()=>pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar vacantes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vacantes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vacantes"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 Postulaciones",
+      "item": [
+        {
+          "name": "Crear postulación (devuelve URL S3)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/postulaciones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "postulaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vacante_id\": \"{{vacante_id}}\",\n  \"nombre\": \"Ana Torres\",\n  \"email\": \"ana.torres@mail.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json(); if(j.postulacion&&j.postulacion.postulacion_id){pm.collectionVariables.set('postulacion_id',j.postulacion.postulacion_id);}",
+                  "pm.test('201',()=>pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar postulaciones de la vacante",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vacantes/{{vacante_id}}/postulaciones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vacantes",
+                "{{vacante_id}}",
+                "postulaciones"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cambiar estado a CONTRATADO (publica SNS)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/postulaciones/{{postulacion_id}}/estado",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "postulaciones",
+                "{{postulacion_id}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"CONTRATADO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Onboarding",
+      "item": [
+        {
+          "name": "Crear tarea de onboarding",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/onboarding",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "onboarding"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empleado_id\": \"{{empleado_id}}\",\n  \"tarea\": \"Firmar contrato\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json(); if(j.onboarding_id){pm.collectionVariables.set('onboarding_id',j.onboarding_id);}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar onboarding del empleado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/onboarding/{{empleado_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "onboarding",
+                "{{empleado_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Completar tarea",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/onboarding/{{empleado_id}}/{{onboarding_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "onboarding",
+                "{{empleado_id}}",
+                "{{onboarding_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json(); pm.test('completada',()=>pm.expect(j.completada).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
+}

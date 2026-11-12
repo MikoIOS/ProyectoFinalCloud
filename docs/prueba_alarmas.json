@@ -1,0 +1,13 @@
+{
+  "fecha": "2026-11-09T22:48:29.405756+00:00",
+  "alarma": "hcm-dev-eda-prueba",
+  "estados_verificados": [
+    "OK",
+    "ALARM",
+    "OK"
+  ],
+  "acciones": [
+    "arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev"
+  ],
+  "alcance": "Verifica evaluación y configuración de acciones; la entrega SNS/correo se comprueba por separado."
+}

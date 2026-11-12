@@ -1,0 +1,33 @@
+service: hcm-monitorizacion
+frameworkVersion: "4"
+
+provider:
+  name: aws
+  runtime: python3.12
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  timeout: 15
+  logRetentionInDays: 14
+  iam:
+    role: arn:aws:iam::851725431647:role/LabRole
+  environment:
+    STAGE: ${sls:stage}
+    CANALES: ${file(./recursos.cjs):canales}
+    EMAIL_TOPIC_ARN:
+      Fn::ImportValue: ms-notificaciones-${sls:stage}-EmailTopicArn
+
+package:
+  patterns:
+    - '!tests/**'
+    - '!**/__pycache__/**'
+
+functions:
+  comprobarCanales:
+    handler: canales.handler
+    timeout: 300
+    events:
+      - schedule: rate(5 minutes)
+  avisarAlarma:
+    handler: avisos.handler
+
+resources: ${file(./recursos.cjs):resources}

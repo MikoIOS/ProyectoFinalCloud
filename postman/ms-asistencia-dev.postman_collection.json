@@ -1,0 +1,200 @@
+{
+  "info": {
+    "name": "ms-asistencia dev",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Obtén token desde ms-usuarios. Para aprobar usa un jefe o RRHH distinto al solicitante. Las fechas son ficticias de prueba."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://p79musr10g.execute-api.us-east-1.amazonaws.com/dev"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "empleado_id",
+      "value": "emp-000002"
+    },
+    {
+      "key": "ausencia_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Ping",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/ping"
+      }
+    },
+    {
+      "name": "02 Entrada",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/marcaciones",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"ENTRADA\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "03 Salida",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/marcaciones",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"SALIDA\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "04 Mis marcaciones",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/marcaciones?empleado={{empleado_id}}"
+      }
+    },
+    {
+      "name": "05 Solicitar permiso",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/ausencias",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"PERMISO\",\n  \"desde\": \"2030-11-10\",\n  \"hasta\": \"2030-11-10\",\n  \"motivo\": \"Prueba Postman\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 201) pm.collectionVariables.set(\"ausencia_id\", pm.response.json().ausencia_id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Mis ausencias",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/ausencias?empleado={{empleado_id}}"
+      }
+    },
+    {
+      "name": "07 Pendientes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/ausencias/pendientes"
+      }
+    },
+    {
+      "name": "08 Detalle ausencia",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/ausencias/{{ausencia_id}}?empleado={{empleado_id}}"
+      }
+    },
+    {
+      "name": "09 Aprobar (requiere token de jefe o RRHH)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/ausencias/{{ausencia_id}}/estado",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"empleado_id\": \"{{empleado_id}}\",\n  \"estado\": \"APROBADA\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "10 Saldo",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/ausencias/saldo/{{empleado_id}}?anio=2026"
+      }
+    },
+    {
+      "name": "11 Resumen (supervisor)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/asistencia/resumen"
+      }
+    },
+    {
+      "name": "12 Reporte CSV (supervisor)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/asistencia/reportes"
+      }
+    }
+  ]
+}

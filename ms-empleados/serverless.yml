@@ -1,6 +1,6 @@
 service: ms-empleados
 
-frameworkVersion: ">=3"
+frameworkVersion: "4"
 
 # Requisito: ms-usuarios debe estar desplegado antes (exporta el Authorizer y el topic hcm-eventos).
 custom:

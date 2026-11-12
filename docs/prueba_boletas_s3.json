@@ -1,0 +1,42 @@
+{
+  "fecha": "2026-11-09T23:28:58.509420+00:00",
+  "bucket": "hcm-boletas-dev-851725431647",
+  "archivos": [
+    {
+      "tenant_id": "andina",
+      "key": "andina/boletas/2026-11/nom-2026-11-emp-000002.pdf",
+      "bytes": 2677,
+      "sha256": "1823a51cd8cd5546db47d48acdfa9676bf53899a3beafce07fcdf79c3a3c9dc3"
+    },
+    {
+      "tenant_id": "pacifico",
+      "key": "pacifico/boletas/2026-11/nom-2026-11-emp-000002.pdf",
+      "bytes": 2675,
+      "sha256": "92c663d8cdce9fc9a80487ec93aa249a900bf85b31340ad94a6b4aa7a8c0c1b1"
+    }
+  ],
+  "comprobaciones": [
+    "Bucket bloquea todo acceso público",
+    "Versionado habilitado",
+    "Cifrado por defecto AES256",
+    "Política exige HTTPS",
+    "Bucket no público",
+    "Login empleado andina",
+    "Descarga PDF andina",
+    "PDF de API coincide con S3 andina",
+    "Objeto cifrado y asociado al tenant andina",
+    "Formato JSON sigue compatible andina",
+    "Se conservan versiones andina",
+    "Empleado no descarga boleta ajena andina",
+    "Login empleado pacifico",
+    "Descarga PDF pacifico",
+    "PDF de API coincide con S3 pacifico",
+    "Objeto cifrado y asociado al tenant pacifico",
+    "Formato JSON sigue compatible pacifico",
+    "Se conservan versiones pacifico",
+    "Empleado no descarga boleta ajena pacifico",
+    "Sin token rechazado",
+    "S3 rechaza descarga anónima",
+    "Tenants tienen objetos distintos"
+  ]
+}

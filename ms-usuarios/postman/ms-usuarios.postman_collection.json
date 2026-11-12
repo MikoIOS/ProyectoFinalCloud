@@ -1,13 +1,25 @@
 {
   "info": {
-    "name": "ms-usuarios · aislamiento y roles",
-    "description": "Ejecutar con Collection Runner en orden. Requiere el seed cargado (cuentas admin|empleado|gerente|reclutador@<tenant>.pe, clave Demo1234!). Cambia la variable base_url por la URL del stage (https://<id>.execute-api.us-east-1.amazonaws.com/dev). La prueba 7 del documento (cese -> login 403) cruza servicios y se hace con scripts/publicar_evento.py.",
+    "name": "ms-usuarios · HCM API (dev)",
+    "description": "API de ms-usuarios desplegada en AWS (stage dev).\n\n1) Ejecuta primero los requests de la carpeta **00 Setup (logins)** — guardan los tokens (token_andina / token_pacifico) como variables de colección.\n2) Luego el resto de carpetas usa esos tokens automáticamente.\n\nBase URL y credenciales demo ya vienen configuradas (password Demo1234!).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "https://REEMPLAZAR.execute-api.us-east-1.amazonaws.com/dev"
+      "value": "https://ckuqmvszfj.execute-api.us-east-1.amazonaws.com/dev"
+    },
+    {
+      "key": "token_andina",
+      "value": ""
+    },
+    {
+      "key": "token_pacifico",
+      "value": ""
+    },
+    {
+      "key": "user_id_nuevo",
+      "value": ""
     }
   ],
   "item": [
@@ -135,6 +147,248 @@
                   "pm.test(\"200 y token\", () => { pm.expect(pm.response.code).to.eql(200); pm.expect(pm.response.json().token).to.be.a(\"string\"); });",
                   "pm.collectionVariables.set(\"token_empleado\", pm.response.json().token);",
                   "pm.test(\"el token es del tenant correcto\", () => pm.expect(pm.response.json().usuario.tenant_id).to.eql(\"andina\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 CRUD básico (happy path)",
+      "item": [
+        {
+          "name": "0. Health /ping",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ping",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "ping"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 y status ok\", () => { pm.expect(pm.response.code).to.eql(200); pm.expect(pm.response.json().status).to.eql(\"ok\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1. Mi usuario (GET /usuarios/me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios",
+                "me"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test(\"tenant andina\", () => pm.expect(pm.response.json().tenant_id).to.eql(\"andina\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Crear usuario (POST /usuarios)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prueba Postman\",\n  \"email\": \"{{email_prueba}}\",\n  \"rol\": \"empleado\",\n  \"password\": \"Demo1234!\",\n  \"empleado_id\": \"emp-000500\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get(\"email_prueba\")) { pm.collectionVariables.set(\"email_prueba\", \"prueba\" + Date.now() + \"@test.pe\"); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.collectionVariables.set(\"user_id_nuevo\", pm.response.json().user_id);",
+                  "pm.test(\"guarda user_id\", () => pm.expect(pm.response.json().user_id).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Obtener usuario por id (GET /usuarios/{id})",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios/{{user_id_nuevo}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{user_id_nuevo}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200\", () => pm.expect(pm.response.code).to.eql(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Actualizar usuario (PATCH /usuarios/{id})",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios/{{user_id_nuevo}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{user_id_nuevo}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prueba Postman Editado\",\n  \"activo\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test(\"nombre actualizado\", () => pm.expect(pm.response.json().nombre).to.eql(\"Prueba Postman Editado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Listar filtrado (rol=empleado, activo=true)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_andina}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios?limit=10&rol=empleado&activo=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios?limit=10&rol=empleado&activo=true"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test(\"todos tenant andina\", () => pm.expect(pm.response.json().items.every(i => i.tenant_id === \"andina\")).to.be.true);"
                 ]
               }
             }

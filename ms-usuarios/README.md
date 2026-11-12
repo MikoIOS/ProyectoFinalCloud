@@ -1,6 +1,6 @@
 # ms-usuarios
 
-Identidad y acceso de la plataforma SaaS HCM (Grupo 2): login por tenant, JWT, roles,
+Identidad y acceso de la plataforma SaaS HCM (Grupo 2): login por correo con empresa vinculada a la cuenta, JWT, roles,
 Authorizer compartido y reacción a eventos de empleados.
 **Estado: completo (etapas 0 a 3).** Pendiente solo desplegar y correr la colección Postman contra AWS.
 
@@ -33,7 +33,7 @@ Con Serverless v3 puede salir un aviso por `python3.12` en el esquema; es solo u
 ## Estructura del proyecto
 ```
 ms-usuarios/
-|-- serverless.yml              # funciones, tabla + 2 GSIs, topic hcm-eventos, cola + DLQ, Authorizer, Outputs
+|-- serverless.yml              # funciones, tabla + 3 GSIs, topic hcm-eventos, cola + DLQ, Authorizer, Outputs
 |-- requirements.txt            # pyjwt (única dependencia)
 |-- requirements-dev.txt        # boto3, pytest, moto
 |-- pytest.ini
@@ -63,7 +63,7 @@ Flujo de una petición: `handlers` (lee el contexto y el body) → `services` (a
 Al terminar `serverless deploy` se imprimen los endpoints (también con `serverless info`). La URL base tiene la forma
 `https://<api-id>.execute-api.us-east-1.amazonaws.com/dev` y es **distinta de la de ms-empleados**.
 1. `GET <base>/ping`: comprueba que el servicio responde (sin token). En PowerShell: `curl.exe <base>/ping`
-2. `POST <base>/auth/login`: la puerta de entrada del sistema; devuelve el JWT. Es la única ruta donde el tenant va en el body.
+2. `POST <base>/auth/login`: la puerta de entrada del sistema; devuelve el JWT. La empresa se obtiene del registro del correo; `tenant_id` es opcional para compatibilidad con clientes anteriores.
 3. Todas las demás rutas (y todas las de ms-empleados) llevan la cabecera `Authorization: Bearer <token>`.
 
 ```powershell
@@ -75,7 +75,7 @@ curl.exe -X POST <base>/auth/login -H "Content-Type: application/json" `
 | Método | Ruta | Rol | Función |
 |---|---|---|---|
 | GET | `/ping` | público | Salud del servicio |
-| POST | `/auth/login` | público | `{tenant_id, email, password}` → JWT (8 h) |
+| POST | `/auth/login` | público | `{email, password} (tenant_id opcional)` → JWT (8 h) |
 | POST | `/auth/cambiar-password` | autenticado | `{password_actual, password_nueva}` (mín. 8) |
 | GET | `/usuarios/me` | autenticado | Perfil del token |
 | POST | `/usuarios` | admin_rrhh | Crea usuario en el tenant del token (201; 409 si el email existe en el tenant) |
@@ -125,3 +125,10 @@ Usar el mismo `JWT_SECRET` en todos los servicios no hace falta: solo el Authori
 ## Pruebas de aislamiento
 Colección unificada de los dos servicios, con su entorno: `HCM-ms-usuarios-ms-empleados.postman_collection.json` y `HCM.postman_environment.json` (se entregan aparte). La de este servicio solo (`postman/ms-usuarios.postman_collection.json`, 16 requests) usa la variable `base_url`.
 Cubre las pruebas 1 a 6 del plan (la 7, cese → login 403, se hace con `publicar_evento`; ya la cubren las pruebas unitarias).
+
+
+## Ingreso sin seleccionar empresa
+
+`POST /auth/login` acepta `{"email":"admin@andina.pe","password":"Demo1234!"}`. El índice `login-email-index` consulta el correo normalizado sin escanear la tabla; se vuelve a leer el registro de forma consistente para validar contraseña, estado y empresa antes de emitir el JWT. Funciona con cualquier dominio de correo: la empresa se toma de la cuenta, nunca se deduce del dominio.
+
+Si un correo está repetido en varias cuentas, el ingreso sin empresa devuelve el mismo 401 de credenciales inválidas. Se deben asignar correos distintos a esas cuentas antes de usar este flujo; no se elige una empresa arbitrariamente. El login anterior con `tenant_id` explícito continúa siendo compatible. El índice tiene consistencia eventual: una cuenta recién creada o un cambio de correo puede necesitar unos instantes para aparecer en el ingreso.

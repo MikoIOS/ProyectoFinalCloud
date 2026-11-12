@@ -1,0 +1,385 @@
+{
+  "info": {
+    "name": "Backend C — HCM (ms-reclutamiento + ms-desempeno)",
+    "description": "Colección de endpoints de los dos microservicios de talento del HCM. Las variables `API_RECL`, `API_DESE` y `TENANT` se configuran en Collection → Variables. Los IDs (vacante, postulación, evaluación, onboarding) se guardan automáticamente en variables al correr los POST/PUT.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "API_RECL",
+      "value": "https://k9zoy1ou55.execute-api.us-east-1.amazonaws.com",
+      "description": "Endpoint base de ms-reclutamiento (sale del `sls deploy`)"
+    },
+    {
+      "key": "API_DESE",
+      "value": "https://b5k8pbnfqa.execute-api.us-east-1.amazonaws.com",
+      "description": "Endpoint base de ms-desempeno (sale del `sls deploy`)"
+    },
+    {
+      "key": "TENANT",
+      "value": "andina",
+      "description": "Tenant de prueba: andina | pacifico | sierra"
+    },
+    {
+      "key": "vacante_id",
+      "value": "",
+      "description": "Se autollena al crear una vacante"
+    },
+    {
+      "key": "postulacion_id",
+      "value": "",
+      "description": "Se autollena al crear una postulación"
+    },
+    {
+      "key": "empleado_id",
+      "value": "emp-000045",
+      "description": "ID de empleado para pruebas"
+    },
+    {
+      "key": "evaluador_id",
+      "value": "emp-000010",
+      "description": "ID de empleado evaluador para pruebas"
+    },
+    {
+      "key": "onboarding_id",
+      "value": "",
+      "description": "Se autollena al crear una tarea de onboarding"
+    },
+    {
+      "key": "evaluacion_id",
+      "value": "",
+      "description": "Se autollena al crear una evaluación"
+    }
+  ],
+  "item": [
+    {
+      "name": "ms-reclutamiento",
+      "item": [
+        {
+          "name": "1. Crear vacante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const r = pm.response.json();",
+                  "const vac = (r.sk || '').replace('VACANTE#', '');",
+                  "if (vac) pm.collectionVariables.set('vacante_id', vac);",
+                  "console.log('vacante_id =', vac);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{TENANT}}\",\n  \"titulo\": \"Desarrollador Backend\",\n  \"area\": \"Tecnología\"\n}"
+            },
+            "url": {
+              "raw": "{{API_RECL}}/vacantes",
+              "host": ["{{API_RECL}}"],
+              "path": ["vacantes"]
+            }
+          }
+        },
+        {
+          "name": "2. Listar vacantes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{API_RECL}}/vacantes?tenant_id={{TENANT}}",
+              "host": ["{{API_RECL}}"],
+              "path": ["vacantes"],
+              "query": [{"key": "tenant_id", "value": "{{TENANT}}"}]
+            }
+          }
+        },
+        {
+          "name": "3. Crear postulación (devuelve cv_upload_url)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const r = pm.response.json();",
+                  "if (r.postulacion && r.postulacion.postulacion_id) {",
+                  "  pm.collectionVariables.set('postulacion_id', r.postulacion.postulacion_id);",
+                  "  console.log('postulacion_id =', r.postulacion.postulacion_id);",
+                  "}",
+                  "if (r.cv_upload_url) console.log('cv_upload_url =', r.cv_upload_url);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{TENANT}}\",\n  \"vacante_id\": \"{{vacante_id}}\",\n  \"nombre\": \"Luis Ramos\",\n  \"email\": \"luis.ramos@test.com\"\n}"
+            },
+            "url": {
+              "raw": "{{API_RECL}}/postulaciones",
+              "host": ["{{API_RECL}}"],
+              "path": ["postulaciones"]
+            }
+          }
+        },
+        {
+          "name": "4. Listar postulaciones por vacante (GSI)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{API_RECL}}/vacantes/{{vacante_id}}/postulaciones?tenant_id={{TENANT}}",
+              "host": ["{{API_RECL}}"],
+              "path": ["vacantes", "{{vacante_id}}", "postulaciones"],
+              "query": [{"key": "tenant_id", "value": "{{TENANT}}"}]
+            }
+          }
+        },
+        {
+          "name": "5. Pipeline → ENTREVISTA",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{TENANT}}\",\n  \"estado\": \"ENTREVISTA\"\n}"
+            },
+            "url": {
+              "raw": "{{API_RECL}}/postulaciones/{{postulacion_id}}/estado",
+              "host": ["{{API_RECL}}"],
+              "path": ["postulaciones", "{{postulacion_id}}", "estado"]
+            }
+          }
+        },
+        {
+          "name": "6. Pipeline → OFERTA",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{TENANT}}\",\n  \"estado\": \"OFERTA\"\n}"
+            },
+            "url": {
+              "raw": "{{API_RECL}}/postulaciones/{{postulacion_id}}/estado",
+              "host": ["{{API_RECL}}"],
+              "path": ["postulaciones", "{{postulacion_id}}", "estado"]
+            }
+          }
+        },
+        {
+          "name": "7. Pipeline → CONTRATADO (dispara SNS PostulanteContratado)",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{TENANT}}\",\n  \"estado\": \"CONTRATADO\"\n}"
+            },
+            "url": {
+              "raw": "{{API_RECL}}/postulaciones/{{postulacion_id}}/estado",
+              "host": ["{{API_RECL}}"],
+              "path": ["postulaciones", "{{postulacion_id}}", "estado"]
+            }
+          }
+        },
+        {
+          "name": "8. Crear tarea de onboarding",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const r = pm.response.json();",
+                  "if (r.onboarding_id) {",
+                  "  pm.collectionVariables.set('onboarding_id', r.onboarding_id);",
+                  "  console.log('onboarding_id =', r.onboarding_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{TENANT}}\",\n  \"empleado_id\": \"{{empleado_id}}\",\n  \"tarea\": \"Entregar laptop\"\n}"
+            },
+            "url": {
+              "raw": "{{API_RECL}}/onboarding",
+              "host": ["{{API_RECL}}"],
+              "path": ["onboarding"]
+            }
+          }
+        },
+        {
+          "name": "9. Listar tareas de onboarding del empleado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{API_RECL}}/onboarding/{{empleado_id}}?tenant_id={{TENANT}}",
+              "host": ["{{API_RECL}}"],
+              "path": ["onboarding", "{{empleado_id}}"],
+              "query": [{"key": "tenant_id", "value": "{{TENANT}}"}]
+            }
+          }
+        },
+        {
+          "name": "10. Completar tarea de onboarding",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{API_RECL}}/onboarding/{{empleado_id}}/{{onboarding_id}}?tenant_id={{TENANT}}",
+              "host": ["{{API_RECL}}"],
+              "path": ["onboarding", "{{empleado_id}}", "{{onboarding_id}}"],
+              "query": [{"key": "tenant_id", "value": "{{TENANT}}"}]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ms-desempeno",
+      "item": [
+        {
+          "name": "1. Crear evaluación (estado PENDIENTE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const r = pm.response.json();",
+                  "if (r.evaluacion_id) {",
+                  "  pm.collectionVariables.set('evaluacion_id', r.evaluacion_id);",
+                  "  console.log('evaluacion_id =', r.evaluacion_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{TENANT}}\",\n  \"empleado_id\": \"{{empleado_id}}\",\n  \"evaluador_id\": \"{{evaluador_id}}\",\n  \"periodo\": \"2026-S2\",\n  \"puntaje\": 4.3,\n  \"competencias\": [\n    { \"nombre\": \"Trabajo en equipo\", \"puntaje\": 5 },\n    { \"nombre\": \"Puntualidad\", \"puntaje\": 4 }\n  ],\n  \"objetivos\": [\"Automatizar reporte mensual\"],\n  \"comentarios\": \"Buen desempeño\"\n}"
+            },
+            "url": {
+              "raw": "{{API_DESE}}/evaluaciones",
+              "host": ["{{API_DESE}}"],
+              "path": ["evaluaciones"]
+            }
+          }
+        },
+        {
+          "name": "2. Listar evaluaciones del empleado (GSI)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{API_DESE}}/evaluaciones?tenant_id={{TENANT}}&empleado={{empleado_id}}",
+              "host": ["{{API_DESE}}"],
+              "path": ["evaluaciones"],
+              "query": [
+                {"key": "tenant_id", "value": "{{TENANT}}"},
+                {"key": "empleado", "value": "{{empleado_id}}"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Completar evaluación (dispara SNS EvaluacionCompletada)",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{TENANT}}\",\n  \"estado\": \"COMPLETADA\",\n  \"puntaje\": 4.5,\n  \"comentarios\": \"Cumplió todos los objetivos\"\n}"
+            },
+            "url": {
+              "raw": "{{API_DESE}}/evaluaciones/{{evaluacion_id}}",
+              "host": ["{{API_DESE}}"],
+              "path": ["evaluaciones", "{{evaluacion_id}}"]
+            }
+          }
+        },
+        {
+          "name": "4. Crear reconocimiento",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{TENANT}}\",\n  \"de_empleado_id\": \"{{evaluador_id}}\",\n  \"para_empleado_id\": \"{{empleado_id}}\",\n  \"mensaje\": \"Excelente trabajo en el proyecto X\"\n}"
+            },
+            "url": {
+              "raw": "{{API_DESE}}/reconocimientos",
+              "host": ["{{API_DESE}}"],
+              "path": ["reconocimientos"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Multi-tenant (demo aislamiento)",
+      "item": [
+        {
+          "name": "Vacantes de pacifico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{API_RECL}}/vacantes?tenant_id=pacifico",
+              "host": ["{{API_RECL}}"],
+              "path": ["vacantes"],
+              "query": [{"key": "tenant_id", "value": "pacifico"}]
+            }
+          }
+        },
+        {
+          "name": "Vacantes de sierra",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{API_RECL}}/vacantes?tenant_id=sierra",
+              "host": ["{{API_RECL}}"],
+              "path": ["vacantes"],
+              "query": [{"key": "tenant_id", "value": "sierra"}]
+            }
+          }
+        },
+        {
+          "name": "Evaluaciones del mismo empleado en otro tenant",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{API_DESE}}/evaluaciones?tenant_id=pacifico&empleado=emp-000045",
+              "host": ["{{API_DESE}}"],
+              "path": ["evaluaciones"],
+              "query": [
+                {"key": "tenant_id", "value": "pacifico"},
+                {"key": "empleado", "value": "emp-000045"}
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

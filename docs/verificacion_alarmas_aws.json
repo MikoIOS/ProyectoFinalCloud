@@ -1,0 +1,139 @@
+{
+  "fecha": "2026-11-09T22:49:55.547735+00:00",
+  "metricas_sns_ultimos_15_minutos": {
+    "alarmas_publicados": 26.0,
+    "alarmas_entregados": 26.0,
+    "alarmas_fallidos": 0.0,
+    "correo_publicados": 5.0,
+    "correo_entregados": 5.0,
+    "correo_fallidos": 0.0
+  },
+  "historial_acciones": [
+    {
+      "AlarmName": "hcm-dev-eda-prueba",
+      "AlarmType": "MetricAlarm",
+      "Timestamp": "2026-11-09 17:48:21.883000-05:00",
+      "HistoryItemType": "Action",
+      "HistorySummary": "Successfully executed action arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev",
+      "HistoryData": "{\"actionState\":\"Succeeded\",\"stateUpdateTimestamp\":1794264501833,\"notificationResource\":\"arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev\",\"publishedMessage\":\"{\\\"default\\\":\\\"{\\\\\\\"AlarmName\\\\\\\":\\\\\\\"hcm-dev-eda-prueba\\\\\\\",\\\\\\\"AlarmDescription\\\\\\\":\\\\\\\"PRUEBA CONTROLADA del canal de alarmas. No representa un fallo de los microservicios.\\\\\\\",\\\\\\\"AWSAccountId\\\\\\\":\\\\\\\"851725431647\\\\\\\",\\\\\\\"AlarmConfigurationUpdatedTimestamp\\\\\\\":\\\\\\\"2026-11-09T22:42:58.766+0000\\\\\\\",\\\\\\\"NewStateValue\\\\\\\":\\\\\\\"OK\\\\\\\",\\\\\\\"NewStateReason\\\\\\\":\\\\\\\"Threshold Crossed: 1 out of the last 1 datapoints [0.0 (09/11/26 22:47:00)] was not greater than or equal to the threshold (1.0) (minimum 1 datapoint for ALARM -> OK transition).\\\\\\\",\\\\\\\"StateChangeTime\\\\\\\":\\\\\\\"2026-11-09T22:48:21.833+0000\\\\\\\",\\\\\\\"Region\\\\\\\":\\\\\\\"US East (N. Virginia)\\\\\\\",\\\\\\\"AlarmArn\\\\\\\":\\\\\\\"arn:aws:cloudwatch:us-east-1:851725431647:alarm:hcm-dev-eda-prueba\\\\\\\",\\\\\\\"OldStateValue\\\\\\\":\\\\\\\"ALARM\\\\\\\",\\\\\\\"ActionExecutedAfterMuteWindow\\\\\\\":false,\\\\\\\"OKActions\\\\\\\":[\\\\\\\"arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev\\\\\\\"],\\\\\\\"AlarmActions\\\\\\\":[\\\\\\\"arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev\\\\\\\"],\\\\\\\"InsufficientDataActions\\\\\\\":[],\\\\\\\"Trigger\\\\\\\":{\\\\\\\"MetricName\\\\\\\":\\\\\\\"PruebaAlarma-dev\\\\\\\",\\\\\\\"Namespace\\\\\\\":\\\\\\\"HCM/EDA\\\\\\\",\\\\\\\"StatisticType\\\\\\\":\\\\\\\"Statistic\\\\\\\",\\\\\\\"Statistic\\\\\\\":\\\\\\\"SUM\\\\\\\",\\\\\\\"Unit\\\\\\\":null,\\\\\\\"Dimensions\\\\\\\":[],\\\\\\\"Period\\\\\\\":60,\\\\\\\"EvaluationPeriods\\\\\\\":1,\\\\\\\"DatapointsToAlarm\\\\\\\":1,\\\\\\\"ComparisonOperator\\\\\\\":\\\\\\\"GreaterThanOrEqualToThreshold\\\\\\\",\\\\\\\"Threshold\\\\\\\":1.0,\\\\\\\"TreatMissingData\\\\\\\":\\\\\\\"notBreaching\\\\\\\",\\\\\\\"EvaluateLowSampleCountPercentile\\\\\\\":\\\\\\\"\\\\\\\"}}\\\",\\\"sms\\\":\\\"OK: \\\\\\\"hcm-dev-eda-prueba\\\\\\\" in US East (N. Virginia)\\\",\\\"email\\\":\\\"You are receiving this email because your Amazon CloudWatch Alarm \\\\\\\"hcm-dev-eda-prueba\\\\\\\" in the US East (N. Virginia) region has entered the OK state, because \\\\\\\"Threshold Crossed: 1 out of the last 1 datapoints [0.0 (09/11/26 22:47:00)] was not greater than or equal to the threshold (1.0) (minimum 1 datapoint for ALARM -> OK transition).\\\\\\\" at \\\\\\\"Monday 09 November, 2026 22:48:21 UTC\\\\\\\".\\\\n\\\\nView this alarm in the AWS Management Console:\\\\nhttps://us-east-1.console.aws.amazon.com/cloudwatch/deeplink.js?region=us-east-1#alarmsV2:alarm/hcm-dev-eda-prueba\\\\n\\\\nAlarm Details:\\\\n- Name:                       hcm-dev-eda-prueba\\\\n- Description:                PRUEBA CONTROLADA del canal de alarmas. No representa un fallo de los microservicios.\\\\n- State Change:               ALARM -> OK\\\\n- Reason for State Change:    Threshold Crossed: 1 out of the last 1 datapoints [0.0 (09/11/26 22:47:00)] was not greater than or equal to the threshold (1.0) (minimum 1 datapoint for ALARM -> OK transition).\\\\n- Timestamp:                  Monday 09 November, 2026 22:48:21 UTC\\\\n- AWS Account:                851725431647\\\\n- Alarm Arn:                  arn:aws:cloudwatch:us-east-1:851725431647:alarm:hcm-dev-eda-prueba\\\\n\\\\nThreshold:\\\\n- The alarm is in the ALARM state when the metric is GreaterThanOrEqualToThreshold 1.0 for at least 1 of the last 1 period(s) of 60 seconds. \\\\n\\\\nMonitored Metric:\\\\n- MetricNamespace:                     HCM/EDA\\\\n- MetricName:                          PruebaAlarma-dev\\\\n- Dimensions:                          \\\\n- Period:                              60 seconds\\\\n- Statistic:                           Sum\\\\n- Unit:                                not specified\\\\n- TreatMissingData:                    notBreaching\\\\n\\\\n\\\\nState Change Actions:\\\\n- OK: [arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev]\\\\n- ALARM: [arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev]\\\\n- INSUFFICIENT_DATA: \\\\n\\\"}\",\"error\":null,\"muteWindowEndTimestamp\":null}"
+    },
+    {
+      "AlarmName": "hcm-dev-eda-prueba",
+      "AlarmType": "MetricAlarm",
+      "Timestamp": "2026-11-09 17:47:21.879000-05:00",
+      "HistoryItemType": "Action",
+      "HistorySummary": "Successfully executed action arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev",
+      "HistoryData": "{\"actionState\":\"Succeeded\",\"stateUpdateTimestamp\":1794264441833,\"notificationResource\":\"arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev\",\"publishedMessage\":\"{\\\"default\\\":\\\"{\\\\\\\"AlarmName\\\\\\\":\\\\\\\"hcm-dev-eda-prueba\\\\\\\",\\\\\\\"AlarmDescription\\\\\\\":\\\\\\\"PRUEBA CONTROLADA del canal de alarmas. No representa un fallo de los microservicios.\\\\\\\",\\\\\\\"AWSAccountId\\\\\\\":\\\\\\\"851725431647\\\\\\\",\\\\\\\"AlarmConfigurationUpdatedTimestamp\\\\\\\":\\\\\\\"2026-11-09T22:42:58.766+0000\\\\\\\",\\\\\\\"NewStateValue\\\\\\\":\\\\\\\"ALARM\\\\\\\",\\\\\\\"NewStateReason\\\\\\\":\\\\\\\"Threshold Crossed: 1 out of the last 1 datapoints [1.0 (09/11/26 22:46:00)] was greater than or equal to the threshold (1.0) (minimum 1 datapoint for OK -> ALARM transition).\\\\\\\",\\\\\\\"StateChangeTime\\\\\\\":\\\\\\\"2026-11-09T22:47:21.833+0000\\\\\\\",\\\\\\\"Region\\\\\\\":\\\\\\\"US East (N. Virginia)\\\\\\\",\\\\\\\"AlarmArn\\\\\\\":\\\\\\\"arn:aws:cloudwatch:us-east-1:851725431647:alarm:hcm-dev-eda-prueba\\\\\\\",\\\\\\\"OldStateValue\\\\\\\":\\\\\\\"OK\\\\\\\",\\\\\\\"ActionExecutedAfterMuteWindow\\\\\\\":false,\\\\\\\"OKActions\\\\\\\":[\\\\\\\"arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev\\\\\\\"],\\\\\\\"AlarmActions\\\\\\\":[\\\\\\\"arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev\\\\\\\"],\\\\\\\"InsufficientDataActions\\\\\\\":[],\\\\\\\"Trigger\\\\\\\":{\\\\\\\"MetricName\\\\\\\":\\\\\\\"PruebaAlarma-dev\\\\\\\",\\\\\\\"Namespace\\\\\\\":\\\\\\\"HCM/EDA\\\\\\\",\\\\\\\"StatisticType\\\\\\\":\\\\\\\"Statistic\\\\\\\",\\\\\\\"Statistic\\\\\\\":\\\\\\\"SUM\\\\\\\",\\\\\\\"Unit\\\\\\\":null,\\\\\\\"Dimensions\\\\\\\":[],\\\\\\\"Period\\\\\\\":60,\\\\\\\"EvaluationPeriods\\\\\\\":1,\\\\\\\"DatapointsToAlarm\\\\\\\":1,\\\\\\\"ComparisonOperator\\\\\\\":\\\\\\\"GreaterThanOrEqualToThreshold\\\\\\\",\\\\\\\"Threshold\\\\\\\":1.0,\\\\\\\"TreatMissingData\\\\\\\":\\\\\\\"notBreaching\\\\\\\",\\\\\\\"EvaluateLowSampleCountPercentile\\\\\\\":\\\\\\\"\\\\\\\"}}\\\",\\\"sms\\\":\\\"ALARM: \\\\\\\"hcm-dev-eda-prueba\\\\\\\" in US East (N. Virginia)\\\",\\\"email\\\":\\\"You are receiving this email because your Amazon CloudWatch Alarm \\\\\\\"hcm-dev-eda-prueba\\\\\\\" in the US East (N. Virginia) region has entered the ALARM state, because \\\\\\\"Threshold Crossed: 1 out of the last 1 datapoints [1.0 (09/11/26 22:46:00)] was greater than or equal to the threshold (1.0) (minimum 1 datapoint for OK -> ALARM transition).\\\\\\\" at \\\\\\\"Monday 09 November, 2026 22:47:21 UTC\\\\\\\".\\\\n\\\\nView this alarm in the AWS Management Console:\\\\nhttps://us-east-1.console.aws.amazon.com/cloudwatch/deeplink.js?region=us-east-1#alarmsV2:alarm/hcm-dev-eda-prueba\\\\n\\\\nAlarm Details:\\\\n- Name:                       hcm-dev-eda-prueba\\\\n- Description:                PRUEBA CONTROLADA del canal de alarmas. No representa un fallo de los microservicios.\\\\n- State Change:               OK -> ALARM\\\\n- Reason for State Change:    Threshold Crossed: 1 out of the last 1 datapoints [1.0 (09/11/26 22:46:00)] was greater than or equal to the threshold (1.0) (minimum 1 datapoint for OK -> ALARM transition).\\\\n- Timestamp:                  Monday 09 November, 2026 22:47:21 UTC\\\\n- AWS Account:                851725431647\\\\n- Alarm Arn:                  arn:aws:cloudwatch:us-east-1:851725431647:alarm:hcm-dev-eda-prueba\\\\n\\\\nThreshold:\\\\n- The alarm is in the ALARM state when the metric is GreaterThanOrEqualToThreshold 1.0 for at least 1 of the last 1 period(s) of 60 seconds. \\\\n\\\\nMonitored Metric:\\\\n- MetricNamespace:                     HCM/EDA\\\\n- MetricName:                          PruebaAlarma-dev\\\\n- Dimensions:                          \\\\n- Period:                              60 seconds\\\\n- Statistic:                           Sum\\\\n- Unit:                                not specified\\\\n- TreatMissingData:                    notBreaching\\\\n\\\\n\\\\nState Change Actions:\\\\n- OK: [arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev]\\\\n- ALARM: [arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev]\\\\n- INSUFFICIENT_DATA: \\\\n\\\"}\",\"error\":null,\"muteWindowEndTimestamp\":null}"
+    },
+    {
+      "AlarmName": "hcm-dev-eda-prueba",
+      "AlarmType": "MetricAlarm",
+      "Timestamp": "2026-11-09 17:43:21.873000-05:00",
+      "HistoryItemType": "Action",
+      "HistorySummary": "Successfully executed action arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev",
+      "HistoryData": "{\"actionState\":\"Succeeded\",\"stateUpdateTimestamp\":1794264201837,\"notificationResource\":\"arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev\",\"publishedMessage\":\"{\\\"default\\\":\\\"{\\\\\\\"AlarmName\\\\\\\":\\\\\\\"hcm-dev-eda-prueba\\\\\\\",\\\\\\\"AlarmDescription\\\\\\\":\\\\\\\"PRUEBA CONTROLADA del canal de alarmas. No representa un fallo de los microservicios.\\\\\\\",\\\\\\\"AWSAccountId\\\\\\\":\\\\\\\"851725431647\\\\\\\",\\\\\\\"AlarmConfigurationUpdatedTimestamp\\\\\\\":\\\\\\\"2026-11-09T22:42:58.766+0000\\\\\\\",\\\\\\\"NewStateValue\\\\\\\":\\\\\\\"OK\\\\\\\",\\\\\\\"NewStateReason\\\\\\\":\\\\\\\"Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].\\\\\\\",\\\\\\\"StateChangeTime\\\\\\\":\\\\\\\"2026-11-09T22:43:21.837+0000\\\\\\\",\\\\\\\"Region\\\\\\\":\\\\\\\"US East (N. Virginia)\\\\\\\",\\\\\\\"AlarmArn\\\\\\\":\\\\\\\"arn:aws:cloudwatch:us-east-1:851725431647:alarm:hcm-dev-eda-prueba\\\\\\\",\\\\\\\"OldStateValue\\\\\\\":\\\\\\\"INSUFFICIENT_DATA\\\\\\\",\\\\\\\"ActionExecutedAfterMuteWindow\\\\\\\":false,\\\\\\\"OKActions\\\\\\\":[\\\\\\\"arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev\\\\\\\"],\\\\\\\"AlarmActions\\\\\\\":[\\\\\\\"arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev\\\\\\\"],\\\\\\\"InsufficientDataActions\\\\\\\":[],\\\\\\\"Trigger\\\\\\\":{\\\\\\\"MetricName\\\\\\\":\\\\\\\"PruebaAlarma-dev\\\\\\\",\\\\\\\"Namespace\\\\\\\":\\\\\\\"HCM/EDA\\\\\\\",\\\\\\\"StatisticType\\\\\\\":\\\\\\\"Statistic\\\\\\\",\\\\\\\"Statistic\\\\\\\":\\\\\\\"SUM\\\\\\\",\\\\\\\"Unit\\\\\\\":null,\\\\\\\"Dimensions\\\\\\\":[],\\\\\\\"Period\\\\\\\":60,\\\\\\\"EvaluationPeriods\\\\\\\":1,\\\\\\\"DatapointsToAlarm\\\\\\\":1,\\\\\\\"ComparisonOperator\\\\\\\":\\\\\\\"GreaterThanOrEqualToThreshold\\\\\\\",\\\\\\\"Threshold\\\\\\\":1.0,\\\\\\\"TreatMissingData\\\\\\\":\\\\\\\"notBreaching\\\\\\\",\\\\\\\"EvaluateLowSampleCountPercentile\\\\\\\":\\\\\\\"\\\\\\\"}}\\\",\\\"sms\\\":\\\"OK: \\\\\\\"hcm-dev-eda-prueba\\\\\\\" in US East (N. Virginia)\\\",\\\"email\\\":\\\"You are receiving this email because your Amazon CloudWatch Alarm \\\\\\\"hcm-dev-eda-prueba\\\\\\\" in the US East (N. Virginia) region has entered the OK state, because \\\\\\\"Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].\\\\\\\" at \\\\\\\"Monday 09 November, 2026 22:43:21 UTC\\\\\\\".\\\\n\\\\nView this alarm in the AWS Management Console:\\\\nhttps://us-east-1.console.aws.amazon.com/cloudwatch/deeplink.js?region=us-east-1#alarmsV2:alarm/hcm-dev-eda-prueba\\\\n\\\\nAlarm Details:\\\\n- Name:                       hcm-dev-eda-prueba\\\\n- Description:                PRUEBA CONTROLADA del canal de alarmas. No representa un fallo de los microservicios.\\\\n- State Change:               INSUFFICIENT_DATA -> OK\\\\n- Reason for State Change:    Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].\\\\n- Timestamp:                  Monday 09 November, 2026 22:43:21 UTC\\\\n- AWS Account:                851725431647\\\\n- Alarm Arn:                  arn:aws:cloudwatch:us-east-1:851725431647:alarm:hcm-dev-eda-prueba\\\\n\\\\nThreshold:\\\\n- The alarm is in the ALARM state when the metric is GreaterThanOrEqualToThreshold 1.0 for at least 1 of the last 1 period(s) of 60 seconds. \\\\n\\\\nMonitored Metric:\\\\n- MetricNamespace:                     HCM/EDA\\\\n- MetricName:                          PruebaAlarma-dev\\\\n- Dimensions:                          \\\\n- Period:                              60 seconds\\\\n- Statistic:                           Sum\\\\n- Unit:                                not specified\\\\n- TreatMissingData:                    notBreaching\\\\n\\\\n\\\\nState Change Actions:\\\\n- OK: [arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev]\\\\n- ALARM: [arn:aws:sns:us-east-1:851725431647:hcm-alarmas-dev]\\\\n- INSUFFICIENT_DATA: \\\\n\\\"}\",\"error\":null,\"muteWindowEndTimestamp\":null}"
+    }
+  ],
+  "estados_alarmas": [
+    {
+      "nombre": "hcm-dev-eda-asistencia-errores",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-asistencia-stream-retraso",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-avisos-errores",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-calendario-errores",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-canales-deshabilitados",
+      "estado": "ALARM"
+    },
+    {
+      "nombre": "hcm-dev-eda-comprobar-canales-errores",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-correo-entrega-fallida",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-empleados-dlq",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-empleados-errores",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-empleados-retraso",
+      "estado": "ALARM"
+    },
+    {
+      "nombre": "hcm-dev-eda-eventos-entrega-fallida",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-fallos-capturados",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-nominas-dlq",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-nominas-errores",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-nominas-retraso",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-notificaciones-dlq",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-notificaciones-errores",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-notificaciones-retraso",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-planillas-dlq",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-planillas-errores",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-planillas-retraso",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-prueba",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-usuarios-dlq",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-usuarios-errores",
+      "estado": "OK"
+    },
+    {
+      "nombre": "hcm-dev-eda-usuarios-retraso",
+      "estado": "ALARM"
+    }
+  ]
+}

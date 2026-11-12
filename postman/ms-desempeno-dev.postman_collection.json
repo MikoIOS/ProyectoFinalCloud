@@ -1,0 +1,402 @@
+{
+  "info": {
+    "name": "ms-desempeno · HCM API (dev)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Desempeño: evaluaciones (crear/listar/actualizar) y reconocimientos. Requiere Bearer token (Authorizer compartido): ejecuta '00 Auth > Login admin andina' para setear {{token}}. El tenant sale del JWT; no enviar tenant_id."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://4gchww17uh.execute-api.us-east-1.amazonaws.com/dev"
+    },
+    {
+      "key": "evaluacion_id",
+      "value": ""
+    },
+    {
+      "key": "empleado_id",
+      "value": "emp-000002"
+    },
+    {
+      "key": "evaluador_id",
+      "value": "emp-000001"
+    },
+    {
+      "key": "login_url",
+      "value": "https://ckuqmvszfj.execute-api.us-east-1.amazonaws.com/dev"
+    },
+    {
+      "key": "tenant_id",
+      "value": "andina"
+    },
+    {
+      "key": "email",
+      "value": "admin@andina.pe"
+    },
+    {
+      "key": "password",
+      "value": "Demo1234!"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Auth",
+      "item": [
+        {
+          "name": "Login admin andina (set token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{login_url}}/auth/login",
+              "host": [
+                "{{login_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json();",
+                  "if(j.token){pm.collectionVariables.set('token',j.token);}",
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 Evaluaciones",
+      "item": [
+        {
+          "name": "Crear evaluación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluaciones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empleado_id\": \"{{empleado_id}}\",\n  \"evaluador_id\": \"{{evaluador_id}}\",\n  \"periodo\": \"2026-Q4\",\n  \"puntaje\": 4.5,\n  \"competencias\": [\n    \"trabajo en equipo\",\n    \"liderazgo\"\n  ],\n  \"objetivos\": [\n    \"cerrar OKRs\"\n  ],\n  \"comentarios\": \"Buen desempeño\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json(); if(j.evaluacion_id){pm.collectionVariables.set('evaluacion_id',j.evaluacion_id);}",
+                  "pm.test('201',()=>pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar evaluaciones del empleado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluaciones?empleado={{empleado_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluaciones"
+              ],
+              "query": [
+                {
+                  "key": "empleado",
+                  "value": "{{empleado_id}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Completar evaluación (publica SNS)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluaciones/{{evaluacion_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluaciones",
+                "{{evaluacion_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"puntaje\": 4.8,\n  \"estado\": \"COMPLETADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json(); pm.test('estado COMPLETADA',()=>pm.expect(j.estado).to.eql('COMPLETADA'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 Reconocimientos",
+      "item": [
+        {
+          "name": "Crear reconocimiento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reconocimientos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reconocimientos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"de_empleado_id\": \"{{evaluador_id}}\",\n  \"para_empleado_id\": \"{{empleado_id}}\",\n  \"mensaje\": \"Gracias por el esfuerzo en el cierre\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201',()=>pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Validaciones",
+      "item": [
+        {
+          "name": "Listar sin ?empleado => 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluaciones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluaciones"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400',()=>pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear evaluación sin empleado_id => 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluaciones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400',()=>pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Estado inválido => 400",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluaciones/{{evaluacion_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluaciones",
+                "{{evaluacion_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"MALO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400',()=>pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
+}

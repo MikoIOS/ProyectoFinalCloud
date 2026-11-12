@@ -1,0 +1,68 @@
+{
+  "fecha": "2026-11-09T20:04:04.908346-05:00",
+  "hoy_lima": "2026-11-09",
+  "minimo_permitido": "2026-11-24",
+  "comprobaciones": [
+    {
+      "rol": "empleado",
+      "dias_anticipacion": -1,
+      "http": 400,
+      "mensaje": "La ausencia debe comenzar con al menos 15 días calendario de anticipación"
+    },
+    {
+      "rol": "empleado",
+      "dias_anticipacion": 0,
+      "http": 400,
+      "mensaje": "La ausencia debe comenzar con al menos 15 días calendario de anticipación"
+    },
+    {
+      "rol": "empleado",
+      "dias_anticipacion": 1,
+      "http": 400,
+      "mensaje": "La ausencia debe comenzar con al menos 15 días calendario de anticipación"
+    },
+    {
+      "rol": "empleado",
+      "dias_anticipacion": 14,
+      "http": 400,
+      "mensaje": "La ausencia debe comenzar con al menos 15 días calendario de anticipación"
+    },
+    {
+      "rol": "empleado",
+      "dias_anticipacion": 15,
+      "http": 400,
+      "mensaje": "motivo debe ser texto de 1 a 500 caracteres"
+    },
+    {
+      "rol": "admin",
+      "dias_anticipacion": -1,
+      "http": 400,
+      "mensaje": "La ausencia debe comenzar con al menos 15 días calendario de anticipación"
+    },
+    {
+      "rol": "admin",
+      "dias_anticipacion": 0,
+      "http": 400,
+      "mensaje": "La ausencia debe comenzar con al menos 15 días calendario de anticipación"
+    },
+    {
+      "rol": "admin",
+      "dias_anticipacion": 1,
+      "http": 400,
+      "mensaje": "La ausencia debe comenzar con al menos 15 días calendario de anticipación"
+    },
+    {
+      "rol": "admin",
+      "dias_anticipacion": 14,
+      "http": 400,
+      "mensaje": "La ausencia debe comenzar con al menos 15 días calendario de anticipación"
+    },
+    {
+      "rol": "admin",
+      "dias_anticipacion": 15,
+      "http": 400,
+      "mensaje": "motivo debe ser texto de 1 a 500 caracteres"
+    }
+  ],
+  "sin_escrituras": "El caso de 15 días omite motivo y se detiene en esa validación; no se crean ausencias de prueba."
+}
