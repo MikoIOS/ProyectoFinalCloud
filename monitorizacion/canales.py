@@ -21,7 +21,7 @@ def handler(event, context=None):
         if not mappings or any(m['State'] != 'Enabled' for m in mappings):
             problemas.append(nombre)
     log.info('Canales no habilitados: %s', json.dumps(problemas))
-    boto3.client('cloudwatch', config=config).put_metric_data(Namespace='HCM/EDA', MetricData=[{
+    boto3.client('cloudwatch', config=config).put_metric_data(Namespace=os.environ.get('METRICS_NAMESPACE', 'HCM/EDA'), MetricData=[{
         'MetricName': 'CanalesDeshabilitados-' + os.environ['STAGE'],
         'Value': len(problemas), 'Unit': 'Count',
     }])

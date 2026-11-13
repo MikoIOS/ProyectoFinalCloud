@@ -1,0 +1,78 @@
+{
+  "verified_at": "2026-11-13T20:13:12.658284+00:00",
+  "status": "PREPARED_NOT_DEPLOYED",
+  "service": "hcm",
+  "scope": "Una API REST por stage, no una API global compartida",
+  "stages": {
+    "dev": {
+      "cloudformation_resources": 436,
+      "lambda_functions": 68,
+      "rest_apis": 1,
+      "dynamodb_tables": 7,
+      "stage_names": [
+        "dev"
+      ],
+      "sqs_mappings": 6,
+      "cloudwatch_alarms": 25
+    },
+    "prod": {
+      "cloudformation_resources": 436,
+      "lambda_functions": 68,
+      "rest_apis": 1,
+      "dynamodb_tables": 7,
+      "stage_names": [
+        "prod"
+      ],
+      "sqs_mappings": 6,
+      "cloudwatch_alarms": 25
+    }
+  },
+  "tests": {
+    "unified_config_artifacts_templates": 11,
+    "legacy_monitor_with_namespace": 7,
+    "packaging_dev": "passed",
+    "packaging_prod": "passed",
+    "broken_ref_getatt_or_cycles": 0
+  },
+  "artifacts": {
+    "usuarios.zip": {
+      "bytes": 43053,
+      "sha256": "7b0289b06409fb296133234378e12200ba74223f8d76f0882c5b065413237cfa"
+    },
+    "empleados.zip": {
+      "bytes": 13101,
+      "sha256": "18475f14af16f6f6a20e1d02a98f476b5f0744362ca1925b0e5bc2643f950e24"
+    },
+    "nominas.zip": {
+      "bytes": 22761,
+      "sha256": "6c67bf3b3cc5c4db3f755b9dad9134ba6b26b6f92fa3c72d4bc39e1e73adfbc0"
+    },
+    "asistencia.zip": {
+      "bytes": 10754,
+      "sha256": "28898844f3bf83626dd3da18fa50c21a5d1d9a0aa81bd02688d560d258f4be9e"
+    },
+    "reclutamiento.zip": {
+      "bytes": 5029,
+      "sha256": "39e7c189ee034aa8b68db25962555bc29d38e23d0f9fd0324a7ff5f8021c9062"
+    },
+    "desempeno.zip": {
+      "bytes": 3290,
+      "sha256": "24e21ea08d3b386a9dc6a7ffe53a6ed176819a23765b417626c8305bf2f313e2"
+    },
+    "notificaciones.zip": {
+      "bytes": 3017533,
+      "sha256": "63acd2ea05e65a656e09c3a26320dd5c8da57f154bb6af9f81c8976b96b1fa4d"
+    },
+    "monitorizacion.zip": {
+      "bytes": 1887,
+      "sha256": "7ce26b0be211f8cbc3f1c8c46c32670b76c9e4d9f01b3a55e633917c4a2091ad"
+    }
+  },
+  "live_changes": false,
+  "limits": [
+    "Sin despliegue, migración de datos o cambio de Amplify",
+    "Plantillas verificadas localmente; sin pruebas de runtime en un stack unificado",
+    "Infraestructura actual permanece activa",
+    "436 recursos por stack; CloudFormation admite hasta 500 por plantilla"
+  ]
+}

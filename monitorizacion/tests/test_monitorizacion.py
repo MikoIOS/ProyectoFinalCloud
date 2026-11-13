@@ -63,6 +63,12 @@ class CanalesTest(unittest.TestCase):
         self.assertEqual(resultado['canales_no_habilitados'], ['consumidor', 'publicador'])
         self.assertEqual(metrica['Value'], 2)
 
+    @patch.dict(os.environ, {'CANALES': '[]', 'STAGE': 'prod', 'METRICS_NAMESPACE': 'HCM/Unificado/EDA'})
+    @patch('canales.boto3.client')
+    def test_namespace_del_servicio_unificado(self, client):
+        canales.handler({})
+        self.assertEqual(client.return_value.put_metric_data.call_args.kwargs['Namespace'], 'HCM/Unificado/EDA')
+
     @patch.dict(os.environ, {'CANALES': '["consumidor"]', 'STAGE': 'dev'})
     @patch('canales.boto3.client')
     def test_error_de_permisos_no_se_reporta_como_saludable(self, client):

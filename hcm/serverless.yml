@@ -1,0 +1,9 @@
+service: hcm
+frameworkVersion: "4"
+configValidationMode: error
+provider: ${file(./.build/service.json):provider}
+package:
+  individually: true
+custom: ${file(./.build/service.json):custom}
+functions: ${file(./.build/service.json):functions}
+resources: ${file(./.build/service.json):resources}

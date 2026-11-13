@@ -9,6 +9,10 @@ El frontend principal se mantiene en `Armandorc7/frontend_mimo`, con su propio h
 
 ---
 
+## Configuración unificada en preparación
+
+[Servicio Serverless `hcm`](hcm/README.md): reúne los 68 Lambdas de negocio y monitorización en un solo servicio, con una API por stage y recursos separados entre dev y prod. El empaquetado y las pruebas están validados; **todavía no sustituye los despliegues actuales ni migra sus datos**. [Evidencia](docs/hcm_unificado_verificacion.json).
+
 ## 1. Resumen del proyecto
 
 Solución SaaS para gestionar **empleados, nóminas, talento, contratación y desempeño**, con aislamiento por tenant.
