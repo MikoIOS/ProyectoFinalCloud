@@ -162,3 +162,8 @@ La colección está en `postman/ms-nominas-dev.postman_collection.json` (y copia
 - La liquidación es referencial y simplificada.
 - La generación de una planilla recorre los empleados del tenant y procesa lotes de 200; para 10k empleados tarda decenas de segundos, no es instantánea.
 - El PDF usa un generador propio sin dependencias externas; cubre el formato de boleta del proyecto, no plantillas legales configurables.
+
+
+### Paginación de conceptos
+
+`GET /nominas/conceptos` admite `periodo`, `empleado_id`, `limit` (1–200, predeterminado 200) y `next_token`. Devuelve `items`, `total` (cantidad de esta página) y `next_token` (null al finalizar). El token se valida contra el tenant de la sesión y `concepto-index`; se mantienen los permisos de consulta por empleado. Desplegar `listarConceptos` antes de publicar el frontend con paginación.

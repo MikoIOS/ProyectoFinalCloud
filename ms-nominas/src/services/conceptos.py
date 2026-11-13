@@ -6,6 +6,7 @@ from decimal import Decimal
 from src.common.auth import propio_o_supervisor
 from src.common.dates import dinero, fecha, inicio_fin_mes, periodo_valido
 from src.common.errors import Conflicto, NoEncontrado, Validacion
+from src.common.pagination import decode_token, encode_token, parse_limit
 from src.repositories import nominas_repo as repo
 
 TIPOS = {"BONO", "DESCUENTO"}
@@ -75,8 +76,10 @@ def listar(ctx, qs):
         from src.common.errors import Prohibido
         raise Prohibido("No tienes permisos para ver conceptos de toda la planilla")
 
-    items, _ = repo.query_conceptos_periodo(ctx.tenant_id, periodo, empleado_id)
-    return {"items": [_publico(i) for i in items], "total": len(items)}
+    limit = parse_limit(qs, default=200)
+    start = decode_token(qs.get("next_token"), ctx.tenant_id, "concepto-index")
+    items, last = repo.query_conceptos_periodo(ctx.tenant_id, periodo, empleado_id, start, limit=limit)
+    return {"items": [_publico(i) for i in items], "total": len(items), "next_token": encode_token(last)}
 
 
 def _publico(item):

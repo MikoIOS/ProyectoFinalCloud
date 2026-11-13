@@ -178,7 +178,7 @@ def put_concepto(item):
     return item
 
 
-def query_conceptos_periodo(tenant_id, periodo, empleado_id=None, start_key=None):
+def query_conceptos_periodo(tenant_id, periodo, empleado_id=None, start_key=None, limit=200):
     filtro = None
     if empleado_id:
         from boto3.dynamodb.conditions import Attr
@@ -186,7 +186,7 @@ def query_conceptos_periodo(tenant_id, periodo, empleado_id=None, start_key=None
     return _query(
         index="concepto-index",
         key_condition=Key("tenant_id").eq(tenant_id) & Key("periodo_concepto").begins_with(periodo + "#"),
-        limit=200,
+        limit=limit,
         start_key=start_key,
         filter_expression=filtro,
     )
