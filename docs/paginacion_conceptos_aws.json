@@ -1,0 +1,80 @@
+{
+  "checked_at": "2026-11-13T19:24:13.838412+00:00",
+  "feature": "Paginación de bonos y descuentos",
+  "page_size": 30,
+  "backend_contract": {
+    "query": [
+      "periodo",
+      "empleado_id",
+      "limit",
+      "next_token"
+    ],
+    "response": [
+      "items",
+      "total",
+      "next_token"
+    ],
+    "total_meaning": "Registros de la página",
+    "limit_default": 200,
+    "limit_max": 200,
+    "tenant_isolation": "Token validado por tenant e índice; empleado conserva filtros y autorización"
+  },
+  "checks": {
+    "backend_unittest": 23,
+    "frontend_unit": "passed",
+    "build": "passed",
+    "lint": "passed",
+    "browser_simulated": 160,
+    "browser_errors": []
+  },
+  "deployment": {
+    "status": "published",
+    "amplify": {
+      "app_id": "d2d9bbvg1i7lcp",
+      "branch": "main",
+      "job_id": "6",
+      "url": "https://main.d2d9bbvg1i7lcp.amplifyapp.com",
+      "status": "SUCCEED"
+    },
+    "lambda": "ms-nominas-dev-listarConceptos",
+    "lambda_source_matches_local": true,
+    "frontend_source_commit": "f2dffb38406ac5e532f4aae3e176b26213031ef2",
+    "backend_source_commit": "1603ff1dd9c84b00fb35825bd5048be835875e6c"
+  },
+  "deployment_verified_at": "2026-11-13T19:30:44.273927+00:00",
+  "real_api": {
+    "verified_at": "2026-11-13T19:28:40.075653+00:00",
+    "checks": [
+      "Login andina",
+      "Login pacifico",
+      "Primera página de 2 con token",
+      "Segunda página sin repetidos",
+      "Token Andina rechazado en Pacífico",
+      "Límite inválido rechazado",
+      "Filtro de empleado se conserva",
+      "Página completa 1 correcta",
+      "Página completa 2 correcta",
+      "Recorrido termina sin repetidos"
+    ],
+    "read_only": true,
+    "records": 366,
+    "pages_limit_200": 2
+  },
+  "real_public_browser": {
+    "checked_at": "2026-11-13T19:29:54.619Z",
+    "url": "https://main.d2d9bbvg1i7lcp.amplifyapp.com",
+    "checks": [
+      "Página inicial de 30 conceptos reales",
+      "Siguiente obtiene 30 registros distintos y conserva periodo",
+      "Primera página recupera los mismos registros",
+      "Controles visibles en móvil de 375px sin desbordamiento global"
+    ],
+    "errors": []
+  },
+  "public_artifact_sha256": {
+    "favicon.svg": "0cebb7bdfce820a2c14678b722c42ea744371fb307bb147ca27bf6e7239d6cd0",
+    "index.html": "a085403129373376fbc5fc24e572d53a32a4c31e14b008277fcc6864e6e96e0e",
+    "assets/index-CYShdvl3.js": "1a345fa3d4b98903a37741881d7c7ec1a4f54563c105e439fc836cbcd7959c6d",
+    "assets/index-Dcdba8-U.css": "4509110cb09bd416b34b0359c424eee0945eddce42d0d3f8f8b5b28bedb1cb5b"
+  }
+}
