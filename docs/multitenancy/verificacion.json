@@ -1,0 +1,52 @@
+{
+  "verified_at": "2026-11-13T19:37:07.975Z",
+  "site": "https://main.d2d9bbvg1i7lcp.amplifyapp.com",
+  "mode": "Solo lectura; dos contextos de navegador independientes; sin modificar datos",
+  "checks": [
+    {
+      "test": "Ingreso y datos propios de Andina",
+      "status": "PASS",
+      "http": 200
+    },
+    {
+      "test": "Ingreso y datos propios de Pacífico",
+      "status": "PASS",
+      "http": 200
+    },
+    {
+      "test": "Forzar tenant_id=pacifico con sesión Andina conserva la ficha de Andina",
+      "status": "PASS",
+      "http": 200
+    },
+    {
+      "test": "La misma ruta /empleados/me devuelve registros diferentes para cada empresa",
+      "status": "PASS",
+      "http": 200
+    },
+    {
+      "test": "Pacífico no puede usar un token de paginación de Andina",
+      "status": "PASS",
+      "http": 400
+    },
+    {
+      "test": "Cambiar tenant_id en el JWT sin una firma válida no permite acceder",
+      "status": "PASS",
+      "http": 401
+    }
+  ],
+  "companies": {
+    "andina": {
+      "company": "Andina",
+      "total_employees": 10005,
+      "employee_id": "emp-000001",
+      "email": "admin@andina.pe"
+    },
+    "pacifico": {
+      "company": "Pacífico",
+      "total_employees": 10000,
+      "employee_id": "emp-000001",
+      "email": "admin@pacifico.pe"
+    }
+  },
+  "errors": []
+}
