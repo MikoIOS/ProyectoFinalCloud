@@ -1,78 +1,206 @@
 {
-  "verified_at": "2026-11-13T20:13:12.658284+00:00",
-  "status": "PREPARED_NOT_DEPLOYED",
+  "verified_at": "2026-11-18T02:09:43.714881+00:00",
+  "status": "DEPLOYED_VERIFIED",
   "service": "hcm",
-  "scope": "Una API REST por stage, no una API global compartida",
+  "dev_verified_before_prod_update": true,
+  "account": "851725431647",
+  "region": "us-east-1",
   "stages": {
     "dev": {
-      "cloudformation_resources": 436,
-      "lambda_functions": 68,
-      "rest_apis": 1,
-      "dynamodb_tables": 7,
-      "stage_names": [
-        "dev"
+      "verified_at": "2026-11-18T01:16:21.178677+00:00",
+      "stage": "dev",
+      "api_url": "https://mwxvk1jpd3.execute-api.us-east-1.amazonaws.com/dev",
+      "stack_status": "UPDATE_COMPLETE",
+      "lambda_count": 17,
+      "lambda_checks": {
+        "hcm-dev-usuarios_http": "HTTP real vía API Gateway",
+        "hcm-dev-reclutamiento_http": "HTTP real vía API Gateway",
+        "hcm-dev-asistencia_http": "HTTP real vía API Gateway",
+        "hcm-dev-empleados_http": "HTTP real vía API Gateway",
+        "hcm-dev-notificaciones_http": "HTTP real vía API Gateway",
+        "hcm-dev-desempeno_http": "HTTP real vía API Gateway",
+        "hcm-dev-nominas_http": "HTTP real vía API Gateway",
+        "hcm-dev-asistencia_calendario": "Invoke real aprobado",
+        "hcm-dev-asistencia_publicarEventos": "Invoke real aprobado",
+        "hcm-dev-authorizer": "Invoke real aprobado",
+        "hcm-dev-empleados_procesarEventos": "Invoke real aprobado",
+        "hcm-dev-monitorizacion_avisarAlarma": "Invoke real aprobado",
+        "hcm-dev-monitorizacion_comprobarCanales": "Invoke real aprobado",
+        "hcm-dev-nominas_procesarEventos": "Invoke real aprobado",
+        "hcm-dev-nominas_procesarPlanilla": "Invoke real aprobado",
+        "hcm-dev-notificaciones_procesarEventos": "Invoke real aprobado",
+        "hcm-dev-usuarios_procesarEventos": "Invoke real aprobado"
+      },
+      "http_checks": [
+        "/usuarios/me",
+        "/empleados?limit=2",
+        "/empleados/resumen",
+        "/nominas/resumen",
+        "/nominas/planillas?limit=2",
+        "/nominas/conceptos?periodo=2026-11&limit=2",
+        "/asistencia/resumen",
+        "/marcaciones?limit=2",
+        "/ausencias?limit=2",
+        "/vacantes",
+        "/evaluaciones?empleado=qa-sin-empleado",
+        "/notificaciones?limit=2",
+        "/bandas"
       ],
-      "sqs_mappings": 6,
-      "cloudwatch_alarms": 25
+      "enabled_event_source_mappings": 6,
+      "alarm_actions_enabled": 25,
+      "dev_data_isolated": true,
+      "business_writes": "Una empresa ficticia de prueba creada en dev",
+      "change_set_review": {
+        "stage": "dev",
+        "lambda_functions": 17,
+        "template_resources": 283,
+        "changes": {
+          "Remove": 175,
+          "Add": 98,
+          "Modify": 70
+        },
+        "stateful_removals_or_replacements": 0
+      }
     },
     "prod": {
-      "cloudformation_resources": 436,
-      "lambda_functions": 68,
-      "rest_apis": 1,
-      "dynamodb_tables": 7,
-      "stage_names": [
-        "prod"
+      "verified_at": "2026-11-18T02:08:46.306874+00:00",
+      "stage": "prod",
+      "api_url": "https://ex9aeywwi7.execute-api.us-east-1.amazonaws.com/prod",
+      "stack_status": "UPDATE_COMPLETE",
+      "lambda_count": 17,
+      "lambda_checks": {
+        "hcm-prod-notificaciones_http": "HTTP real vía API Gateway",
+        "hcm-prod-empleados_http": "HTTP real vía API Gateway",
+        "hcm-prod-nominas_http": "HTTP real vía API Gateway",
+        "hcm-prod-asistencia_http": "HTTP real vía API Gateway",
+        "hcm-prod-desempeno_http": "HTTP real vía API Gateway",
+        "hcm-prod-reclutamiento_http": "HTTP real vía API Gateway",
+        "hcm-prod-usuarios_http": "HTTP real vía API Gateway",
+        "hcm-prod-asistencia_calendario": "DryRun autorizado; cron no ejecutado manualmente sobre datos productivos",
+        "hcm-prod-asistencia_publicarEventos": "Invoke real aprobado",
+        "hcm-prod-authorizer": "Invoke real aprobado",
+        "hcm-prod-empleados_procesarEventos": "Invoke real aprobado",
+        "hcm-prod-monitorizacion_avisarAlarma": "Invoke real aprobado",
+        "hcm-prod-monitorizacion_comprobarCanales": "Invoke real aprobado",
+        "hcm-prod-nominas_procesarEventos": "Invoke real aprobado",
+        "hcm-prod-nominas_procesarPlanilla": "Invoke real aprobado",
+        "hcm-prod-notificaciones_procesarEventos": "Invoke real aprobado",
+        "hcm-prod-usuarios_procesarEventos": "Invoke real aprobado"
+      },
+      "http_checks": [
+        "/usuarios/me",
+        "/empleados?limit=2",
+        "/empleados/resumen",
+        "/nominas/resumen",
+        "/nominas/planillas?limit=2",
+        "/nominas/conceptos?periodo=2026-11&limit=2",
+        "/asistencia/resumen",
+        "/marcaciones?limit=2",
+        "/ausencias?limit=2",
+        "/vacantes",
+        "/evaluaciones?empleado=emp-000001",
+        "/notificaciones?limit=2",
+        "/bandas"
       ],
-      "sqs_mappings": 6,
-      "cloudwatch_alarms": 25
+      "enabled_event_source_mappings": 6,
+      "alarm_actions_enabled": 25,
+      "dev_data_isolated": null,
+      "business_writes": "Ninguna escritura de negocio durante la verificación",
+      "payroll_regression_fix": {
+        "cause": "El cálculo leía tipo=CONCEPTO en lugar de tipo_concepto=BONO/DESCUENTO/SIN_GOCE",
+        "source_file": "ms-nominas/src/services/calculo.py",
+        "regression_test": "test_conceptos_con_formato_persistido_en_dynamodb",
+        "regression_failed_before_fix": true,
+        "nominas_tests_passed": 24,
+        "hcm_tests_passed": 30,
+        "dev_eda_passed_before_prod_fix_update": true,
+        "production_historical_payrolls_recalculated": false,
+        "source_sha256": "7108685b6a1ce861bf67274d15b8be0ded10a1f5f1a682eb54fa0e542fdaf3bf",
+        "dev_artifact_verification": {
+          "stage": "dev",
+          "verified_at": "2026-11-18T02:01:59.047617+00:00",
+          "functions": [
+            "hcm-dev-nominas_http",
+            "hcm-dev-nominas_procesarEventos",
+            "hcm-dev-nominas_procesarPlanilla"
+          ],
+          "package_sha256": "CgW/6WIkVs/tc0bIRKeZYJFZaP+GnmJeqYAnPRSAHZs=",
+          "source_sha256": "7108685b6a1ce861bf67274d15b8be0ded10a1f5f1a682eb54fa0e542fdaf3bf"
+        },
+        "prod_package_sha256_verified": "7rvzaIgn4B7ek8mwP+AAytCdkVk8/vdg7lxqH/8FLNo=",
+        "prod_update_started_at": "2026-11-18T02:06:17.881000+00:00",
+        "prod_verified_at": "2026-11-18T02:09:43.713090+00:00"
+      }
     }
   },
+  "prod_original_tables_preserved": [
+    "hcm-asistencia-dev",
+    "hcm-desempeno-dev",
+    "hcm-empleados",
+    "hcm-nominas-dev",
+    "hcm-notificaciones-dev",
+    "hcm-reclutamiento-dev",
+    "hcm-usuarios"
+  ],
   "tests": {
-    "unified_config_artifacts_templates": 11,
-    "legacy_monitor_with_namespace": 7,
-    "packaging_dev": "passed",
-    "packaging_prod": "passed",
-    "broken_ref_getatt_or_cycles": 0
-  },
-  "artifacts": {
-    "usuarios.zip": {
-      "bytes": 43053,
-      "sha256": "7b0289b06409fb296133234378e12200ba74223f8d76f0882c5b065413237cfa"
+    "python_passed": 177,
+    "node_passed": 13,
+    "template_tests_skipped": 0,
+    "client_live_prod": {
+      "admin_andina": {
+        "passed": 17,
+        "total": 17
+      },
+      "empleado_pacifico": {
+        "passed": 9,
+        "total": 9
+      }
     },
-    "empleados.zip": {
-      "bytes": 13101,
-      "sha256": "18475f14af16f6f6a20e1d02a98f476b5f0744362ca1925b0e5bc2643f950e24"
-    },
-    "nominas.zip": {
-      "bytes": 22761,
-      "sha256": "6c67bf3b3cc5c4db3f755b9dad9134ba6b26b6f92fa3c72d4bc39e1e73adfbc0"
-    },
-    "asistencia.zip": {
-      "bytes": 10754,
-      "sha256": "28898844f3bf83626dd3da18fa50c21a5d1d9a0aa81bd02688d560d258f4be9e"
-    },
-    "reclutamiento.zip": {
-      "bytes": 5029,
-      "sha256": "39e7c189ee034aa8b68db25962555bc29d38e23d0f9fd0324a7ff5f8021c9062"
-    },
-    "desempeno.zip": {
-      "bytes": 3290,
-      "sha256": "24e21ea08d3b386a9dc6a7ffe53a6ed176819a23765b417626c8305bf2f313e2"
-    },
-    "notificaciones.zip": {
-      "bytes": 3017533,
-      "sha256": "63acd2ea05e65a656e09c3a26320dd5c8da57f154bb6af9f81c8976b96b1fa4d"
-    },
-    "monitorizacion.zip": {
-      "bytes": 1887,
-      "sha256": "7ce26b0be211f8cbc3f1c8c46c32670b76c9e4d9f01b3a55e633917c4a2091ad"
+    "after_payroll_fix": {
+      "hcm_passed": 30,
+      "nominas_passed": 24,
+      "client_live_prod_admin_andina": {
+        "passed": 17,
+        "total": 17
+      }
     }
   },
-  "live_changes": false,
-  "limits": [
-    "Sin despliegue, migración de datos o cambio de Amplify",
-    "Plantillas verificadas localmente; sin pruebas de runtime en un stack unificado",
-    "Infraestructura actual permanece activa",
-    "436 recursos por stack; CloudFormation admite hasta 500 por plantilla"
-  ]
+  "frontend_public_status": 200,
+  "limitations": [
+    "EDA con mensajes de negocio ejecutado exclusivamente en dev; prod comprobado con lecturas, lotes vacíos y comparación del ZIP corregido.",
+    "Calendario de prod comprobado con DryRun.",
+    "No se verificó entrega en una bandeja de correo; el topic de dev no tiene suscriptores.",
+    "No se recalcularon planillas históricas de producción."
+  ],
+  "eda_dev": {
+    "status": "PASSED",
+    "run": "E2E-7a5bc01873",
+    "evidence": "docs/eda_dev_real_verificacion.json",
+    "consumer_functions_with_business_events": 6
+  },
+  "payroll_regression_fix": {
+    "cause": "El cálculo leía tipo=CONCEPTO en lugar de tipo_concepto=BONO/DESCUENTO/SIN_GOCE",
+    "source_file": "ms-nominas/src/services/calculo.py",
+    "regression_test": "test_conceptos_con_formato_persistido_en_dynamodb",
+    "regression_failed_before_fix": true,
+    "nominas_tests_passed": 24,
+    "hcm_tests_passed": 30,
+    "dev_eda_passed_before_prod_fix_update": true,
+    "production_historical_payrolls_recalculated": false,
+    "source_sha256": "7108685b6a1ce861bf67274d15b8be0ded10a1f5f1a682eb54fa0e542fdaf3bf",
+    "dev_artifact_verification": {
+      "stage": "dev",
+      "verified_at": "2026-11-18T02:01:59.047617+00:00",
+      "functions": [
+        "hcm-dev-nominas_http",
+        "hcm-dev-nominas_procesarEventos",
+        "hcm-dev-nominas_procesarPlanilla"
+      ],
+      "package_sha256": "CgW/6WIkVs/tc0bIRKeZYJFZaP+GnmJeqYAnPRSAHZs=",
+      "source_sha256": "7108685b6a1ce861bf67274d15b8be0ded10a1f5f1a682eb54fa0e542fdaf3bf"
+    },
+    "prod_package_sha256_verified": "7rvzaIgn4B7ek8mwP+AAytCdkVk8/vdg7lxqH/8FLNo=",
+    "prod_update_started_at": "2026-11-18T02:06:17.881000+00:00",
+    "prod_verified_at": "2026-11-18T02:09:43.713090+00:00"
+  }
 }

@@ -1,4 +1,5 @@
 """Un despliegue Serverless; cada módulo conserva sus imports y su artefacto."""
+import argparse
 import copy
 import importlib.util
 import json
@@ -49,7 +50,7 @@ def function_id(key):
     return key[0].upper() + key[1:].replace('_', 'Underscore') + 'LambdaFunction'
 
 
-def compose():
+def compose(bootstrap=False, group_http=True):
     configs = {m: yaml.load((module_dir(m) / 'serverless.yml').read_text(), Loader=CloudFormationLoader) for m in MODULES}
     monitor = json.loads(subprocess.check_output(
         ['node', '-e', "process.stdout.write(JSON.stringify(require('./recursos.cjs')))"],
@@ -74,6 +75,7 @@ def compose():
         if kind == 'AWS::DynamoDB::Table':
             old = props['TableName']; new = f'hcm-{STAGE}-{TABLES[logical]}'
             replacements[old] = new; props['TableName'] = new
+            props['PointInTimeRecoverySpecification'] = {'PointInTimeRecoveryEnabled': True}
         elif kind == 'AWS::SQS::Queue':
             old = props['QueueName']; new = f'hcm-{STAGE}-{old}'
             replacements[old] = new
@@ -142,6 +144,8 @@ def compose():
             for event in fn.get('events', []):
                 if 'http' in event and event['http']['path'] == 'ping' and module != 'usuarios':
                     event['http']['path'] = module + '/ping'
+            if bootstrap:
+                fn['events'] = [e for e in fn.get('events', []) if 'http' in e]
             functions[function_key(module, name)] = fn
     for name, output in outputs.items():
         if 'Export' in output:
@@ -160,8 +164,42 @@ def compose():
               'logRetentionInDays': 14, 'iam': {'role': '${env:LAB_ROLE_ARN}'},
               'apiGateway': {'binaryMediaTypes': ['application/pdf']}},
               'custom': {}, 'functions': functions, 'resources': {'Resources': resources, 'Outputs': outputs}}
+    if group_http:
+        result['functions'], result['custom']['httpRoutes'] = group_http_functions(functions)
+    if bootstrap:
+        result['provider']['apiGateway']['resourcePolicy'] = [
+            {'Effect': 'Deny', 'Principal': '*', 'Action': 'execute-api:Invoke', 'Resource': 'execute-api:/*'}]
     validate(result)
     return result
+
+
+def group_http_functions(functions):
+    grouped, routes = {}, {}
+    for key, fn in functions.items():
+        events = fn.get('events', [])
+        if not any('http' in event for event in events):
+            grouped[key] = copy.deepcopy(fn)
+            continue
+        if not all('http' in event for event in events):
+            raise ValueError('No mezclar eventos HTTP y workers: ' + key)
+        module = key.split('_', 1)[0]
+        destination = module + '_http'
+        if destination not in grouped:
+            grouped[destination] = copy.deepcopy(fn)
+            grouped[destination].update(handler='hcm_http.handler', events=[])
+            routes[module] = {}
+        target = grouped[destination]
+        if any(target[field] != fn[field] for field in ('runtime', 'environment', 'package')):
+            raise ValueError('Configuraciones incompatibles para agrupar: ' + key)
+        target['timeout'] = max(target['timeout'], fn['timeout'])
+        target['events'].extend(copy.deepcopy(events))
+        for event in events:
+            http = event['http']
+            route = http['method'].upper() + ' ' + http['path'].strip('/')
+            if route in routes[module]:
+                raise ValueError('Ruta duplicada: ' + route)
+            routes[module][route] = {'handler': fn['handler'], 'protected': bool(http.get('authorizer'))}
+    return grouped, routes
 
 
 def validate(config):
@@ -182,7 +220,18 @@ def validate(config):
         raise ValueError('Se necesitan siete tablas independientes')
 
 
-def package_modules():
+def configure_stage(config, stage, existing=None, bootstrap=False):
+    if stage == 'dev':
+        return copy.deepcopy(config)
+    if stage != 'prod':
+        raise ValueError('Stage desconocido: ' + stage)
+    if existing is None:
+        raise ValueError('Producción requiere el manifiesto de los recursos originales')
+    from reuse import apply_existing
+    return apply_existing(config, existing, background=True, bootstrap=bootstrap)
+
+
+def package_modules(config):
     output = Path(__file__).parent / '.build'; output.mkdir(exist_ok=True)
     for module in MODULES:
         source = module_dir(module)
@@ -195,6 +244,11 @@ def package_modules():
                 raise RuntimeError('Ejecuta npm ci dentro de ms-notificaciones antes de empaquetar')
             roots.append(dependencies)
         with zipfile.ZipFile(output / (module + '.zip'), 'w', zipfile.ZIP_DEFLATED) as z:
+            routes = config.get('custom', {}).get('httpRoutes', {}).get(module)
+            if routes:
+                extension = 'js' if module == 'notificaciones' else 'py'
+                z.write(Path(__file__).with_name('http_router.' + extension), 'hcm_http.' + extension)
+                z.writestr('hcm_routes.json', json.dumps(routes, ensure_ascii=False))
             for base in roots:
                 for p in ([base] if base.is_file() else base.rglob('*')):
                     if p.is_file() and not p.is_symlink() and (base.name == 'node_modules' or p.suffix in ('.py', '.js')) and '__pycache__' not in p.parts:
@@ -209,8 +263,18 @@ def package_modules():
 
 
 if __name__ == '__main__':
-    config = compose()
-    package_modules()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--bootstrap', action='store_true', help='Mantener la nueva API cerrada hasta verificarla')
+    parser.add_argument('--stage', choices=('dev','prod'), default='dev')
+    parser.add_argument('--existing', type=Path, default=Path(__file__).parent / '.runtime/existing-dev.json')
+    args = parser.parse_args()
+    config = compose(bootstrap=args.bootstrap)
+    if args.stage == 'prod' and not args.existing.exists():
+        raise RuntimeError('Primero ejecuta hcm/existing.py para identificar las bases actuales; no se crearán tablas nuevas')
+    existing = json.loads(args.existing.read_text()) if args.stage == 'prod' else None
+    config = configure_stage(config, args.stage, existing, bootstrap=args.bootstrap)
+    package_modules(config)
     destination = Path(__file__).parent / '.build/service.json'
     destination.write_text(json.dumps(config, ensure_ascii=False, indent=2) + '\n')
-    print(f"Configuración preparada: {len(config['functions'])} Lambdas, una API por stage, siete tablas y monitorización.")
+    print(f"Configuración preparada: {len(config['functions'])} Lambdas, una API, " +
+          ('siete tablas nuevas de pruebas.' if args.stage == 'dev' else 'bases originales conservadas para producción.'))

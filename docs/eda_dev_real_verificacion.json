@@ -1,0 +1,175 @@
+{
+  "run": "E2E-7a5bc01873",
+  "stage": "dev",
+  "started_at": "2026-11-18T02:01:37.694617+00:00",
+  "checks": [
+    {
+      "name": "Recursos aislados de dev; seis consumidores habilitados; topic de correo sin suscriptores",
+      "status": "PASSED"
+    },
+    {
+      "name": "Reclutamiento → SNS/SQS → consumidor empleados: empleado creado",
+      "status": "PASSED",
+      "postulacion_id": "pos-296b5039",
+      "empleado_id": "emp-p296b5039"
+    },
+    {
+      "name": "EmpleadoCreado → SNS/SQS → consumidor usuarios: login del empleado funciona",
+      "status": "PASSED",
+      "user_id": "usr-p296b5039"
+    },
+    {
+      "name": "EmpleadoCreado → notificaciones: bienvenida visible para el usuario creado",
+      "status": "PASSED"
+    },
+    {
+      "name": "Asistencia → DynamoDB Stream → SNS/SQS → nóminas y notificaciones",
+      "status": "PASSED",
+      "ausencia_id": "aus-11c91d8bf8524d46a665f48f9c496c48",
+      "concepto_id": "con-c2071d86",
+      "dias_sin_goce": 2,
+      "anticipacion_minima_rechazada": true
+    },
+    {
+      "name": "Bono y descuento manual guardados con el formato real de DynamoDB",
+      "status": "PASSED"
+    },
+    {
+      "name": "HTTP 202 → SQS → worker planillas → nómina GENERADA → SNS/SQS → notificación",
+      "status": "PASSED",
+      "nomina_id": "nom-2026-12-emp-p296b5039",
+      "periodo": "2026-12",
+      "neto": 2486,
+      "bono": 100,
+      "descuento_manual": 50,
+      "descuento_sin_goce": 200
+    },
+    {
+      "name": "Boleta PDF descargable por empleado y guardada cifrada en S3 dev",
+      "status": "PASSED",
+      "pdf_bytes": 2977,
+      "bucket": "hcm-dev-boletas-851725431647"
+    },
+    {
+      "name": "Evaluación completada → SNS/SQS → notificación del empleado",
+      "status": "PASSED",
+      "evaluacion_id": "eva-40102e4b"
+    },
+    {
+      "name": "Aislamiento entre dos empresas, rechazo anónimo y lectura autorizada de notificación",
+      "status": "PASSED"
+    },
+    {
+      "name": "Reentrega SNS sin duplicar descuento ni aviso; cinco colas y cinco DLQs vacías",
+      "status": "PASSED",
+      "queue_counts": {
+        "ColaEmpleados": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        },
+        "ColaEmpleadosDLQ": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        },
+        "ColaEventos": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        },
+        "ColaEventosDLQ": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        },
+        "ColaNotificaciones": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        },
+        "ColaNotificacionesDLQ": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        },
+        "ColaTrabajos": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        },
+        "ColaTrabajosDLQ": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        },
+        "ColaUsuarios": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        },
+        "ColaUsuariosDLQ": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        }
+      }
+    },
+    {
+      "name": "Monitor real confirma los seis consumidores habilitados",
+      "status": "PASSED"
+    }
+  ],
+  "resources": {
+    "event_topic": "arn:aws:sns:us-east-1:851725431647:hcm-dev-eventos"
+  },
+  "tenant_ids": [
+    "empresa-d1d151f1bf5f492da290ece6d09b0d8e",
+    "empresa-bfe94e8882cd478fa9f2167c5449f707"
+  ],
+  "status": "PASSED",
+  "completed_at": "2026-11-18T02:03:09.399202+00:00",
+  "consumer_functions": [
+    "hcm-dev-asistencia_publicarEventos",
+    "hcm-dev-notificaciones_procesarEventos",
+    "hcm-dev-nominas_procesarPlanilla",
+    "hcm-dev-empleados_procesarEventos",
+    "hcm-dev-nominas_procesarEventos",
+    "hcm-dev-usuarios_procesarEventos"
+  ],
+  "production_mutations": false,
+  "email_delivery_tested": false,
+  "fixtures_retained": true,
+  "duplicate_delivery_queue_metric": {
+    "queue_name": "hcm-dev-ms-nominas-eventos",
+    "metric": "NumberOfMessagesDeleted",
+    "sum_since_run_start_minute": 2.0,
+    "window_start": "2026-11-18T02:01:00+00:00",
+    "checked_at": "2026-11-18T02:05:14.271564+00:00"
+  },
+  "payroll_regression_fix": {
+    "cause": "El cálculo leía tipo=CONCEPTO en lugar de tipo_concepto=BONO/DESCUENTO/SIN_GOCE",
+    "source_file": "ms-nominas/src/services/calculo.py",
+    "regression_test": "test_conceptos_con_formato_persistido_en_dynamodb",
+    "regression_failed_before_fix": true,
+    "nominas_tests_passed": 24,
+    "hcm_tests_passed": 30,
+    "dev_eda_passed_before_prod_fix_update": true,
+    "production_historical_payrolls_recalculated": false,
+    "source_sha256": "7108685b6a1ce861bf67274d15b8be0ded10a1f5f1a682eb54fa0e542fdaf3bf",
+    "dev_artifact_verification": {
+      "stage": "dev",
+      "verified_at": "2026-11-18T02:01:59.047617+00:00",
+      "functions": [
+        "hcm-dev-nominas_http",
+        "hcm-dev-nominas_procesarEventos",
+        "hcm-dev-nominas_procesarPlanilla"
+      ],
+      "package_sha256": "CgW/6WIkVs/tc0bIRKeZYJFZaP+GnmJeqYAnPRSAHZs=",
+      "source_sha256": "7108685b6a1ce861bf67274d15b8be0ded10a1f5f1a682eb54fa0e542fdaf3bf"
+    },
+    "prod_package_sha256_verified": "7rvzaIgn4B7ek8mwP+AAytCdkVk8/vdg7lxqH/8FLNo=",
+    "prod_update_started_at": "2026-11-18T02:06:17.881000+00:00",
+    "prod_verified_at": "2026-11-18T02:09:43.713090+00:00"
+  }
+}

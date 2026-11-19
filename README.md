@@ -9,9 +9,9 @@ El frontend principal se mantiene en `Armandorc7/frontend_mimo`, con su propio h
 
 ---
 
-## Configuración unificada en preparación
+## Servicio unificado HCM
 
-[Servicio Serverless `hcm`](hcm/README.md): reúne los 68 Lambdas de negocio y monitorización en un solo servicio, con una API por stage y recursos separados entre dev y prod. El empaquetado y las pruebas están validados; **todavía no sustituye los despliegues actuales ni migra sus datos**. [Evidencia](docs/hcm_unificado_verificacion.json).
+[Servicio Serverless `hcm`](hcm/README.md): desplegado en dev y prod con **17 Lambdas por entorno**, 58 rutas y una REST API por stage. Dev se verificó antes de actualizar prod. Las siete tablas y los recursos de pruebas están separados; producción conserva las bases originales. Cada entorno tiene seis consumidores habilitados y 25 alarmas con acciones activas. El frontend publicado conserva la API de prod. [Verificación AWS](docs/hcm_unificado_verificacion.json) · [Pruebas y límites](docs/lambdas_agrupadas.md) · [EDA real aprobado](docs/eda_dev_real.md) · [Respaldos S3](backup/README.md).
 
 ## 1. Resumen del proyecto
 

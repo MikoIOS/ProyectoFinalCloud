@@ -14,12 +14,12 @@ class UnifiedServiceTest(unittest.TestCase):
         cls.config = compose()
 
     def test_todos_los_modulos_y_rutas_sin_duplicados(self):
-        self.assertEqual(len(self.config['functions']), 68)
+        self.assertEqual(len(self.config['functions']), 17)
         for module in MODULES:
             self.assertTrue(any(k.startswith(module + '_') for k in self.config['functions']), module)
         validate(self.config)
         functions = self.config['functions']
-        self.assertEqual(functions['usuarios_login']['handler'], 'src/handlers/auth.login')
+        self.assertEqual(functions['usuarios_http']['handler'], 'hcm_http.handler')
         self.assertEqual(functions['notificaciones_procesarEventos']['runtime'], 'nodejs22.x')
         self.assertEqual(functions['nominas_procesarPlanilla']['timeout'], 900)
         self.assertTrue(any('stream' in e for e in functions['asistencia_publicarEventos']['events']))
@@ -46,8 +46,8 @@ class UnifiedServiceTest(unittest.TestCase):
             for e in fn.get('events', []):
                 if e.get('http', {}).get('authorizer'):
                     self.assertEqual(e['http']['authorizer']['name'], 'authorizer')
-        self.assertEqual(self.config['functions']['usuarios_login']['environment']['JWT_SECRET'], '${env:HCM_JWT_SECRET_${sls:stage}}')
-        self.assertEqual(self.config['functions']['nominas_generar']['environment']['TABLE_EMPLEADOS'], {'Ref': 'TablaEmpleados'})
+        self.assertEqual(self.config['functions']['usuarios_http']['environment']['JWT_SECRET'], '${env:HCM_JWT_SECRET_${sls:stage}}')
+        self.assertEqual(self.config['functions']['nominas_http']['environment']['TABLE_EMPLEADOS'], {'Ref': 'TablaEmpleados'})
 
     def test_monitor_apunta_a_funciones_y_colas_unificadas(self):
         fn = self.config['functions']['monitorizacion_comprobarCanales']
@@ -65,11 +65,11 @@ class UnifiedServiceTest(unittest.TestCase):
 
     def test_artefactos_separados_evitan_colision_de_imports(self):
         self.assertEqual(len({f['package']['artifact'] for f in self.config['functions'].values()}), len(MODULES))
-        self.assertEqual(self.config['functions']['usuarios_login']['package']['artifact'], '.build/usuarios.zip')
-        self.assertEqual(self.config['functions']['empleados_crearEmpleado']['package']['artifact'], '.build/empleados.zip')
+        self.assertEqual(self.config['functions']['usuarios_http']['package']['artifact'], '.build/usuarios.zip')
+        self.assertEqual(self.config['functions']['empleados_http']['package']['artifact'], '.build/empleados.zip')
 
     def test_duplicar_una_ruta_falla_antes_de_desplegar(self):
         config = copy.deepcopy(self.config)
-        config['functions']['otra'] = copy.deepcopy(config['functions']['usuarios_login'])
+        config['functions']['otra'] = copy.deepcopy(config['functions']['usuarios_http'])
         with self.assertRaisesRegex(ValueError, 'Ruta duplicada'):
             validate(config)

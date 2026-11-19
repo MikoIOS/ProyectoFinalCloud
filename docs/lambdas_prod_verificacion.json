@@ -1,0 +1,70 @@
+{
+  "verified_at": "2026-11-18T02:08:46.306874+00:00",
+  "stage": "prod",
+  "api_url": "https://ex9aeywwi7.execute-api.us-east-1.amazonaws.com/prod",
+  "stack_status": "UPDATE_COMPLETE",
+  "lambda_count": 17,
+  "lambda_checks": {
+    "hcm-prod-notificaciones_http": "HTTP real vía API Gateway",
+    "hcm-prod-empleados_http": "HTTP real vía API Gateway",
+    "hcm-prod-nominas_http": "HTTP real vía API Gateway",
+    "hcm-prod-asistencia_http": "HTTP real vía API Gateway",
+    "hcm-prod-desempeno_http": "HTTP real vía API Gateway",
+    "hcm-prod-reclutamiento_http": "HTTP real vía API Gateway",
+    "hcm-prod-usuarios_http": "HTTP real vía API Gateway",
+    "hcm-prod-asistencia_calendario": "DryRun autorizado; cron no ejecutado manualmente sobre datos productivos",
+    "hcm-prod-asistencia_publicarEventos": "Invoke real aprobado",
+    "hcm-prod-authorizer": "Invoke real aprobado",
+    "hcm-prod-empleados_procesarEventos": "Invoke real aprobado",
+    "hcm-prod-monitorizacion_avisarAlarma": "Invoke real aprobado",
+    "hcm-prod-monitorizacion_comprobarCanales": "Invoke real aprobado",
+    "hcm-prod-nominas_procesarEventos": "Invoke real aprobado",
+    "hcm-prod-nominas_procesarPlanilla": "Invoke real aprobado",
+    "hcm-prod-notificaciones_procesarEventos": "Invoke real aprobado",
+    "hcm-prod-usuarios_procesarEventos": "Invoke real aprobado"
+  },
+  "http_checks": [
+    "/usuarios/me",
+    "/empleados?limit=2",
+    "/empleados/resumen",
+    "/nominas/resumen",
+    "/nominas/planillas?limit=2",
+    "/nominas/conceptos?periodo=2026-11&limit=2",
+    "/asistencia/resumen",
+    "/marcaciones?limit=2",
+    "/ausencias?limit=2",
+    "/vacantes",
+    "/evaluaciones?empleado=emp-000001",
+    "/notificaciones?limit=2",
+    "/bandas"
+  ],
+  "enabled_event_source_mappings": 6,
+  "alarm_actions_enabled": 25,
+  "dev_data_isolated": null,
+  "business_writes": "Ninguna escritura de negocio durante la verificación",
+  "payroll_regression_fix": {
+    "cause": "El cálculo leía tipo=CONCEPTO en lugar de tipo_concepto=BONO/DESCUENTO/SIN_GOCE",
+    "source_file": "ms-nominas/src/services/calculo.py",
+    "regression_test": "test_conceptos_con_formato_persistido_en_dynamodb",
+    "regression_failed_before_fix": true,
+    "nominas_tests_passed": 24,
+    "hcm_tests_passed": 30,
+    "dev_eda_passed_before_prod_fix_update": true,
+    "production_historical_payrolls_recalculated": false,
+    "source_sha256": "7108685b6a1ce861bf67274d15b8be0ded10a1f5f1a682eb54fa0e542fdaf3bf",
+    "dev_artifact_verification": {
+      "stage": "dev",
+      "verified_at": "2026-11-18T02:01:59.047617+00:00",
+      "functions": [
+        "hcm-dev-nominas_http",
+        "hcm-dev-nominas_procesarEventos",
+        "hcm-dev-nominas_procesarPlanilla"
+      ],
+      "package_sha256": "CgW/6WIkVs/tc0bIRKeZYJFZaP+GnmJeqYAnPRSAHZs=",
+      "source_sha256": "7108685b6a1ce861bf67274d15b8be0ded10a1f5f1a682eb54fa0e542fdaf3bf"
+    },
+    "prod_package_sha256_verified": "7rvzaIgn4B7ek8mwP+AAytCdkVk8/vdg7lxqH/8FLNo=",
+    "prod_update_started_at": "2026-11-18T02:06:17.881000+00:00",
+    "prod_verified_at": "2026-11-18T02:09:43.713090+00:00"
+  }
+}

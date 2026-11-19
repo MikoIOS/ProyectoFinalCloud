@@ -63,6 +63,16 @@ class CalculoNominaTest(unittest.TestCase):
         self.assertEqual(n["neto"], Decimal("2842.00"))
         self.assertTrue(any("Ausencia sin goce" in d["concepto"] for d in n["detalle"]))
 
+    def test_conceptos_con_formato_persistido_en_dynamodb(self):
+        n = calculo.calcular(empleado(salario_base=Decimal("3000")), "2026-11", [
+            {"tipo": "CONCEPTO", "tipo_concepto": "BONO", "monto": Decimal("100")},
+            {"tipo": "CONCEPTO", "tipo_concepto": "DESCUENTO", "monto": Decimal("50")},
+            {"tipo": "CONCEPTO", "tipo_concepto": "SIN_GOCE", "dias": 2},
+        ])
+        self.assertEqual(n["bonos"], Decimal("100.00"))
+        self.assertEqual(n["descuentos"], Decimal("614.00"))
+        self.assertEqual(n["neto"], Decimal("2486.00"))
+
     def test_ingreso_a_mitad_de_mes(self):
         n = calculo.calcular(empleado(fecha_ingreso="2026-11-16"), "2026-11", [])
         self.assertEqual(n["dias_laborados"], 15)

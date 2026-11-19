@@ -49,7 +49,7 @@ def calcular(empleado, periodo, conceptos):
     dias_sin_goce = 0
 
     for c in conceptos or []:
-        tipo = c.get("tipo")
+        tipo = c.get("tipo_concepto") or c.get("tipo")
         monto = Decimal(str(c.get("monto") or 0))
         if tipo == "BONO":
             bonos += monto

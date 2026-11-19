@@ -7,7 +7,7 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "https://ts3pqiwi7e.execute-api.us-east-1.amazonaws.com/dev"
+      "value": "https://mwxvk1jpd3.execute-api.us-east-1.amazonaws.com/dev"
     },
     {
       "key": "vacante_id",
@@ -27,7 +27,7 @@
     },
     {
       "key": "login_url",
-      "value": "https://ckuqmvszfj.execute-api.us-east-1.amazonaws.com/dev"
+      "value": "https://mwxvk1jpd3.execute-api.us-east-1.amazonaws.com/dev"
     },
     {
       "key": "tenant_id",

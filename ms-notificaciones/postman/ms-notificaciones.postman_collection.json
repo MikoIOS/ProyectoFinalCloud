@@ -12,7 +12,7 @@
     ]
   },
   "variable": [
-    { "key": "baseUrl", "value": "https://3wfj6ozaga.execute-api.us-east-1.amazonaws.com/dev" },
+    { "key": "baseUrl", "value": "https://mwxvk1jpd3.execute-api.us-east-1.amazonaws.com/dev" },
     { "key": "token", "value": "" },
     { "key": "notificacion_id", "value": "" }
   ],

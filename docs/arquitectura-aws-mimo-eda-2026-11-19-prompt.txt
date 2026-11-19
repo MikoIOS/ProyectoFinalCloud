@@ -1,0 +1,74 @@
+Herramienta integrada: image_gen. Diagrama basado en código y evidencias del repositorio; no es auditoría en vivo.
+
+PROMPT INICIAL
+Create a polished, very readable high-resolution landscape AWS technical architecture diagram in Spanish, approximately 16:10. This is an engineering diagram for Mimo, a real event-driven HCM system. Clean white canvas, navy headings, muted blue and orange AWS Lambda icons, magenta SNS and SQS, blue DynamoDB cylinders, red dead-letter queues. Flat crisp technical iconography, orthogonal directed arrows, no crossed connectors, strong grouping, enough negative space. Text must be legible and accurate. Do not overload with prose. Prioritize events, queue routing, and notifications over decorative imagery. No made-up services, no Cognito, SES, Redis, Kubernetes, EC2 application servers, or Lambda-to-Lambda direct calls.
+
+MAIN TITLE: "Mimo · Arquitectura orientada a eventos"
+SUBTITLE: "17 Lambdas · 7 tablas DynamoDB · 5 colas SQS + 5 DLQ por entorno"
+Small two badges "DEV /dev" and "PROD /prod" with clear note "Mismo patrón, recursos separados por entorno". Draw one detailed logical environment instead of duplicating the entire complex diagram.
+
+TOP STRIP, labelled "1 · Acceso HTTP":
+"Usuarios" → "AWS Amplify · Frontend Mimo" → "API Gateway · 58 rutas" → "7 Lambdas HTTP".
+Small side shield "Lambda Authorizer · JWT" connected bidirectionally with API Gateway, not a data intermediary.
+Under the 7 HTTP Lambdas, show seven small labels "Usuarios · Empleados · Nóminas · Asistencia · Reclutamiento · Desempeño · Notificaciones".
+A small attached storage callout "DynamoDB: una tabla por microservicio" and "S3: CVs y boletas PDF", linked with the HTTP services. Below top strip, connect HTTP services to the event publishing area.
+
+MAIN CENTRAL AREA, labelled "2 · Comunicación asíncrona entre microservicios".
+Use a hub-and-spoke diagram flowing left to right.
+
+LEFT PUBLISHER COLUMN, five compact source cards:
+- "Reclutamiento" with outgoing event label "PostulanteContratado".
+- "Empleados" with outgoing labels "EmpleadoCreado / EmpleadoCesado".
+- "Desempeño" with outgoing event label "EvaluacionCompletada".
+- A longer "Asistencia → DynamoDB → Streams → Lambda publicadora" path with outgoing label "AusenciaSolicitada / Aprobada / Finalizada".
+- A reference "Worker de planilla" with outgoing event "NominaGenerada".
+All these directed publishing arrows converge into ONE central large magenta hub "Amazon SNS · Topic de eventos", secondary label "Publicación / suscripción". These are event publications, NOT direct synchronous Lambda invocation. The worker of planilla is detailed in the lower band; use a logical reference for the publisher without making it an additional physical Lambda.
+
+TO RIGHT OF SNS HUB, show exactly FOUR clean fan-out rows, each clearly connected from the SAME central SNS topic to a queue, then its consumer Lambda. Use magenta arrows labelled "Filtro por tipo_evento". Each queue also has a small separate red branch to its OWN DLQ, exactly four here.
+ROW 1: "SQS · Empleados" → "Lambda · Eventos empleados" → effect label "Crea empleado / actualiza estado".
+Under the queue in small text "PostulanteContratado · AusenciaAprobada · AusenciaFinalizada".
+Add a feedback arrow or clear return connector from the employee consumer to the SAME central SNS hub labelled "Publica EmpleadoCreado" to demonstrate event chaining. The feedback must not connect to a separate SNS instance.
+ROW 2: "SQS · Usuarios" → "Lambda · Eventos usuarios" → effect label "Crea cuenta / desactiva acceso".
+Small event filter "EmpleadoCreado · EmpleadoCesado".
+ROW 3: "SQS · Nómina" → "Lambda · Eventos nómina" → effect label "Descuento sin goce / liquidación".
+Small event filter "AusenciaAprobada · EmpleadoCesado".
+ROW 4: "SQS · Notificaciones" → "Lambda · Notificaciones". Small filter text "Contratación · Empleados · Ausencias · Nóminas · Evaluaciones". Expand this output visibly into TWO meaningful distinct branches:
+branch A: "DynamoDB · Notificaciones" → "API HTTP de notificaciones" → "Bandeja en Mimo", label "Consultar / marcar leída".
+branch B: "SNS · Topic de correo" → "Suscripciones email confirmadas". Do NOT show SES or imply email is sent automatically to an arbitrary address in event metadata. Email topic is a DIFFERENT topic from the event hub.
+
+LOWER SEPARATE BAND, labelled "3 · Planilla en segundo plano":
+"POST /nominas/generar" → "Lambda HTTP · Nóminas" → "SQS · Trabajos de planilla" → "Lambda worker · Planilla" → "DynamoDB · Nóminas".
+A small label near HTTP "Respuesta 202".
+Exactly one red DLQ branch from this SQS queue; this is the FIFTH queue and FIFTH DLQ overall.
+From planilla worker, directed arrow back to the MAIN event SNS hub, labelled "NominaGenerada (si notificar)". This queue is fed DIRECTLY by the HTTP Lambda, NOT by SNS. Never draw SNS as its input.
+
+Small observability and reliability footer:
+"Reintentos y DLQ tras 3 recepciones · Consumidores idempotentes"
+"CloudWatch: 25 alarmas + 2 Lambdas de monitoreo"
+"Calendario: 1 Lambda programada"
+"tenant_id viaja en cada evento; datos aislados por empresa"
+A small simple dashed backup annotation "DynamoDB PITR → S3 Backups · Preparado, pendiente de verificar", with legend dashed = planned backup only.
+Small evidence caveat "EDA real verificado en dev; entrega de correo en dev no verificada".
+Reference date "Según código y evidencias del repositorio · 19-Nov-2026".
+
+Important counts and identities:
+Only 4 event queues are subscribed to SNS, plus 1 direct planilla job queue = 5 primary queues. Every one has an individual DLQ = 5 DLQs. 6 event workers: 4 SQS event consumers + 1 SQS planilla worker + 1 DynamoDB Streams publisher. Other Lambdas are 7 HTTP + 1 authorizer + 1 calendar + 2 monitoring = 17. Repeated visual references of the same HTTP, SNS, or planilla worker must be clear logical references, not additional infrastructure. The goal is that a reader can trace PostulanteContratado → empleados → EmpleadoCreado → usuarios AND notifications, and can see where retries and email delivery occur. Preserve correct arrow direction and readable text.
+
+CORRECCIÓN APLICADA
+Edit the provided AWS architecture diagram. Preserve its overall layout, title, Spanish text, AWS service cards, counts, colors, all unrelated arrows, event names, feedback loops, footer, and diagram dimensions. This is a precise technical correction, not a redesign.
+
+CRITICAL FIX: In section "2 · Comunicación asíncrona entre microservicios", the FOUR little red DLQ boxes are currently IN SERIES between each SQS queue and its consumer Lambda. That is WRONG.
+For each of the four rows (Empleados, Usuarios, Nómina, Notificaciones):
+- Main processing path MUST be "SQS queue → Lambda consumer" DIRECTLY with a clear horizontal pink arrow that never passes through a DLQ.
+- Move the red DLQ box slightly below the main horizontal arrow within that row's space, using the available vertical whitespace.
+- Draw a separate short red branch FROM the SQS queue DOWN to that row's DLQ.
+- The DLQ is a terminal sink: NO outgoing arrow from the DLQ to the Lambda, NO outgoing arrow back to the main processing path.
+- Keep each DLQ individually labelled "DLQ · Empleados", "DLQ · Usuarios", "DLQ · Nómina", "DLQ · Notificaciones".
+- Exactly four terminal DLQ branches here, plus the fifth DLQ already correctly drawn below "SQS · Trabajos de planilla" in section 3. Keep the fifth one as it is.
+- You may shift the four row contents vertically a little inside section 2 if necessary to create breathing room for those small branches, but preserve each queue→consumer pairing and readable event filter labels. No overlapping labels, no connector crossing.
+
+SECOND SMALL FIX: In the producer "Asistencia" card at left, make the internal publication chain unmistakably "DynamoDB → Streams → Lambda publicadora". Use those correct captions under the three icons, with source title "Asistencia" above. Keep its outgoing event labels "AusenciaSolicitada / Aprobada / Finalizada". Currently a database icon is wrongly captioned Asistencia and the stream icon is captioned DynamoDB; fix the captions.
+
+THIRD SMALL FIX: Add the missing short arrow from the right edge of "Lambda · Eventos empleados" to its output card "Crea empleado / actualiza estado".
+
+Retain the feedback "Publica EmpleadoCreado" from the employees consumer to the one main SNS event topic. Keep notifications branching to DynamoDB and to a DISTINCT SNS email topic. Preserve the direct planilla HTTP→SQS→worker path and the worker's NominaGenerada feedback to the main SNS topic. Do not alter any counts or add any physical Lambda. Professional crisp high-resolution Spanish technical infographic.

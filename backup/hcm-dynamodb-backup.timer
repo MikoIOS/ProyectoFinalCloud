@@ -1,0 +1,10 @@
+[Unit]
+Description=Respaldo diario de DynamoDB HCM
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 UTC
+Persistent=true
+Unit=hcm-dynamodb-backup.service
+
+[Install]
+WantedBy=timers.target

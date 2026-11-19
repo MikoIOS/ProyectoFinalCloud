@@ -7,11 +7,11 @@
   "variable": [
     {
       "key": "base_usuarios",
-      "value": "https://ckuqmvszfj.execute-api.us-east-1.amazonaws.com/dev"
+      "value": "https://mwxvk1jpd3.execute-api.us-east-1.amazonaws.com/dev"
     },
     {
       "key": "base_empleados",
-      "value": "https://39vy8bpqn4.execute-api.us-east-1.amazonaws.com/dev"
+      "value": "https://mwxvk1jpd3.execute-api.us-east-1.amazonaws.com/dev"
     }
   ],
   "item": [

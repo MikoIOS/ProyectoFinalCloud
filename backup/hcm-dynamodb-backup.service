@@ -1,0 +1,20 @@
+[Unit]
+Description=Exportación de DynamoDB HCM a S3
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=hcmbackup
+Group=hcmbackup
+UMask=0077
+StateDirectory=hcm-backups
+StateDirectoryMode=0700
+EnvironmentFile=/etc/hcm-backup.env
+ExecStart=/opt/hcm-backup/.venv/bin/python /opt/hcm-backup/dynamodb_backup.py --bucket ${HCM_BACKUP_BUCKET} --destination /var/lib/hcm-backups --region us-east-1
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/hcm-backups
+TimeoutStartSec=6h

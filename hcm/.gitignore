@@ -1,2 +1,6 @@
 .build/
 .serverless/
+
+.migration/
+
+.runtime/

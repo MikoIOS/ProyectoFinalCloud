@@ -1,0 +1,56 @@
+{
+  "verified_at": "2026-11-18T01:16:21.178677+00:00",
+  "stage": "dev",
+  "api_url": "https://mwxvk1jpd3.execute-api.us-east-1.amazonaws.com/dev",
+  "stack_status": "UPDATE_COMPLETE",
+  "lambda_count": 17,
+  "lambda_checks": {
+    "hcm-dev-usuarios_http": "HTTP real vía API Gateway",
+    "hcm-dev-reclutamiento_http": "HTTP real vía API Gateway",
+    "hcm-dev-asistencia_http": "HTTP real vía API Gateway",
+    "hcm-dev-empleados_http": "HTTP real vía API Gateway",
+    "hcm-dev-notificaciones_http": "HTTP real vía API Gateway",
+    "hcm-dev-desempeno_http": "HTTP real vía API Gateway",
+    "hcm-dev-nominas_http": "HTTP real vía API Gateway",
+    "hcm-dev-asistencia_calendario": "Invoke real aprobado",
+    "hcm-dev-asistencia_publicarEventos": "Invoke real aprobado",
+    "hcm-dev-authorizer": "Invoke real aprobado",
+    "hcm-dev-empleados_procesarEventos": "Invoke real aprobado",
+    "hcm-dev-monitorizacion_avisarAlarma": "Invoke real aprobado",
+    "hcm-dev-monitorizacion_comprobarCanales": "Invoke real aprobado",
+    "hcm-dev-nominas_procesarEventos": "Invoke real aprobado",
+    "hcm-dev-nominas_procesarPlanilla": "Invoke real aprobado",
+    "hcm-dev-notificaciones_procesarEventos": "Invoke real aprobado",
+    "hcm-dev-usuarios_procesarEventos": "Invoke real aprobado"
+  },
+  "http_checks": [
+    "/usuarios/me",
+    "/empleados?limit=2",
+    "/empleados/resumen",
+    "/nominas/resumen",
+    "/nominas/planillas?limit=2",
+    "/nominas/conceptos?periodo=2026-11&limit=2",
+    "/asistencia/resumen",
+    "/marcaciones?limit=2",
+    "/ausencias?limit=2",
+    "/vacantes",
+    "/evaluaciones?empleado=qa-sin-empleado",
+    "/notificaciones?limit=2",
+    "/bandas"
+  ],
+  "enabled_event_source_mappings": 6,
+  "alarm_actions_enabled": 25,
+  "dev_data_isolated": true,
+  "business_writes": "Una empresa ficticia de prueba creada en dev",
+  "change_set_review": {
+    "stage": "dev",
+    "lambda_functions": 17,
+    "template_resources": 283,
+    "changes": {
+      "Remove": 175,
+      "Add": 98,
+      "Modify": 70
+    },
+    "stateful_removals_or_replacements": 0
+  }
+}

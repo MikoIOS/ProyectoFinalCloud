@@ -30,14 +30,18 @@ def references(value):
 class PackagedTemplatesTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        newest_source = max((BUILD.parent / name).stat().st_mtime for name in ('build.py', 'reuse.py'))
+        if any((BUILD / ('check-' + stage) / 'cloudformation-template-update-stack.json').stat().st_mtime < newest_source
+               for stage in ('dev', 'prod')):
+            raise unittest.SkipTest('Plantillas antiguas: volver a empaquetar dev y prod con la configuración actual')
         cls.templates = {stage: json.loads((BUILD / ('check-' + stage) / 'cloudformation-template-update-stack.json').read_text())
                          for stage in ('dev', 'prod')}
 
-    def test_api_unica_68_lambdas_y_stage_correcto(self):
+    def test_api_unica_17_lambdas_tablas_por_entorno_y_stage_correcto(self):
         for stage, template in self.templates.items():
             resources = list(template['Resources'].values())
             with self.subTest(stage=stage):
-                for kind, count in [('AWS::ApiGateway::RestApi', 1), ('AWS::Lambda::Function', 68), ('AWS::DynamoDB::Table', 7)]:
+                for kind, count in [('AWS::ApiGateway::RestApi', 1), ('AWS::Lambda::Function', 17), ('AWS::DynamoDB::Table', 7 if stage == 'dev' else 0)]:
                     self.assertEqual(sum(r['Type'] == kind for r in resources), count)
                 self.assertLessEqual(len(resources), 500)
                 self.assertEqual([r['Properties']['StageName'] for r in resources if r['Type'] == 'AWS::ApiGateway::Deployment'], [stage])

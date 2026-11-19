@@ -20,7 +20,7 @@ class ArtifactTest(unittest.TestCase):
                     self.assertIn(handler, z.namelist())
                     self.assertLess(sum(i.file_size for i in z.infolist()), 250 * 1024 * 1024)
                     self.assertFalse(any(n.startswith('/') or '..' in Path(n).parts for n in z.namelist()))
-                    if key == 'usuarios_login':
+                    if key == 'usuarios_http':
                         self.assertIn('jwt/__init__.py', z.namelist())
                     if key == 'notificaciones_procesarEventos':
                         self.assertIn('node_modules/@aws-sdk/client-sns/package.json', z.namelist())
