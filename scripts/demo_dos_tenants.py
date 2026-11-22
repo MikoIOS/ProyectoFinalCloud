@@ -84,20 +84,22 @@ def ciclo(api, account, directory, save_accounts):
     token = account['admin_token']
     tenant = account['tenant_id']
     label = account['alias']
-    vacante = api.request('POST', '/vacantes', {'titulo': 'Analista DEMO ' + label,
-                         'area': 'Tecnología'}, token, (201,))
-    postulacion = api.request('POST', '/postulaciones', {
-        'vacante_id': vacante['vacante_id'], 'nombre': 'Persona Demo ' + label,
-        'nombres': 'Persona', 'apellidos': 'Demo ' + label,
-        'email': account['empleado_email'], 'documento': account['documento'],
-        'area': 'Tecnología', 'cargo': 'Analista', 'salario_base': 3000,
-        'fecha_ingreso': f'{date.today().year}-01-01'}, token, (201,))['postulacion']
-    account['vacante_id'] = vacante['vacante_id']
-    post_id = postulacion['postulacion_id']
-    api.request('PATCH', f'/postulaciones/{post_id}/estado', {'estado': 'CONTRATADO'}, token)
-    emp = 'emp-p' + post_id.split('-', 1)[1]
-    account['empleado_id'] = emp
-    save_accounts()
+    if not account.get('empleado_id'):
+        vacante = api.request('POST', '/vacantes', {'titulo': 'Analista DEMO ' + label,
+                             'area': 'Tecnología'}, token, (201,))
+        postulacion = api.request('POST', '/postulaciones', {
+            'vacante_id': vacante['vacante_id'], 'nombre': 'Persona Demo ' + label,
+            'nombres': 'Persona', 'apellidos': 'Demo ' + label,
+            'email': account['empleado_email'], 'documento': account['documento'],
+            'area': 'Tecnología', 'cargo': 'Analista', 'salario_base': 3000,
+            'fecha_ingreso': f'{date.today().year}-01-01'}, token, (201,))['postulacion']
+        account['vacante_id'] = vacante['vacante_id']
+        post_id = postulacion['postulacion_id']
+        api.request('PATCH', f'/postulaciones/{post_id}/estado', {'estado': 'CONTRATADO'}, token)
+        emp = 'emp-p' + post_id.split('-', 1)[1]
+        account['empleado_id'] = emp
+        save_accounts()
+    emp = account['empleado_id']
     employee = api.esperar('empleado por SNS/SQS',
         lambda: api.request('GET', '/empleados/' + emp, token=token, expected=(200, 404)),
         lambda data: data.get('empleado_id') == emp)
@@ -160,37 +162,75 @@ def ciclo(api, account, directory, save_accounts):
     save_accounts()
 
 
+
+def cargar_continuacion(directory):
+    directory = directory.resolve()
+    if not directory.is_relative_to((ROOT / 'hcm' / '.runtime').resolve()):
+        raise ValueError('La continuación debe usar un directorio privado hcm/.runtime')
+    data = json.loads((directory / 'cuentas.json').read_text())
+    accounts = data['cuentas']
+    if data['base_url'] != BASE or len(accounts) != 2:
+        raise ValueError('Se requieren dos empresas de la misma API dev')
+    if accounts[0]['tenant_id'] == accounts[1]['tenant_id']:
+        raise ValueError('Los tenants deben ser distintos')
+    # shortcut: retoma el fallo previo al login del empleado; otros puntos requieren revisar escrituras ya realizadas.
+    if any(a.get('empleado_token') or a.get('periodo') for a in accounts):
+        raise ValueError('La demo avanzó después de la contratación; revisar antes de repetir escrituras')
+    for account in accounts:
+        for field in ('admin_email', 'admin_password', 'empleado_email', 'empleado_password',
+                      'documento', 'alias', 'tenant_id', 'admin_user_id'):
+            if not account.get(field):
+                raise ValueError('Cuenta incompleta: falta ' + field)
+    return directory, accounts
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args()
+    parser.add_argument("--continuar", type=Path, help="Directorio de demo detenida esperando al empleado")
+    args = parser.parse_args()
     api = Curl(BASE)
     api.request('GET', '/ping')  # Fallar antes de crear cuentas si no hay conectividad.
-    run_id = secrets.token_hex(6)
-    directory = ROOT / 'hcm' / '.runtime' / ('demo-' + run_id)
-    directory.mkdir(parents=True, mode=0o700)
-    directory.chmod(0o700)
-    accounts = []
+    if args.continuar:
+        directory, accounts = cargar_continuacion(args.continuar)
+        previous = directory / 'resultado.json'
+        if previous.exists():
+            guardar(directory / 'resultado-antes-continuar.json', json.loads(previous.read_text()))
+    else:
+        run_id = secrets.token_hex(6)
+        directory = ROOT / 'hcm' / '.runtime' / ('demo-' + run_id)
+        directory.mkdir(parents=True, mode=0o700)
+        directory.chmod(0o700)
+        accounts = []
     def save_accounts():
         guardar(directory / 'cuentas.json', {'base_url': BASE, 'cuentas': accounts})
     try:
-        for alias in ('andina-demo', 'pacifico-demo'):
-            account = {'alias': alias, 'empresa': alias + '-' + run_id,
-                'admin_email': f'admin.{alias}.{run_id}@example.invalid',
-                'admin_password': 'Demo!' + secrets.token_urlsafe(18) + '9a',
-                'empleado_email': f'persona.{alias}.{run_id}@example.invalid',
-                'empleado_password': 'Demo!' + secrets.token_urlsafe(18) + '9a',
-                'documento': str(10000000 + secrets.randbelow(90000000)),
-                'ruc': '20' + ''.join(str(secrets.randbelow(10)) for _ in range(9))}
-            accounts.append(account)
-            save_accounts()  # Conservar credenciales incluso si falla un paso posterior.
-            api.request('POST', '/auth/register', {'empresa': account['empresa'], 'ruc': account['ruc'],
-                'nombre': 'Admin Demo', 'email': account['admin_email'],
-                'password': account['admin_password']}, expected=(201,))
-            session = api.request('POST', '/auth/login', {'email': account['admin_email'],
-                                 'password': account['admin_password']})
-            account.update(admin_token=session['token'], tenant_id=session['usuario']['tenant_id'],
-                           admin_user_id=session['usuario']['user_id'])
+        if args.continuar:
+            for account in accounts:
+                session = api.request('POST', '/auth/login', {
+                    'email': account['admin_email'], 'password': account['admin_password']})
+                if session['usuario']['tenant_id'] != account['tenant_id']:
+                    raise RuntimeError('La sesión recuperada corresponde a otro tenant')
+                account['admin_token'] = session['token']
             save_accounts()
+        else:
+            for alias in ('andina-demo', 'pacifico-demo'):
+                account = {'alias': alias, 'empresa': alias + '-' + run_id,
+                    'admin_email': f'admin.{alias}.{run_id}@example.invalid',
+                    'admin_password': 'Demo!' + secrets.token_urlsafe(18) + '9a',
+                    'empleado_email': f'persona.{alias}.{run_id}@example.invalid',
+                    'empleado_password': 'Demo!' + secrets.token_urlsafe(18) + '9a',
+                    'documento': str(10000000 + secrets.randbelow(90000000)),
+                    'ruc': '20' + ''.join(str(secrets.randbelow(10)) for _ in range(9))}
+                accounts.append(account)
+                save_accounts()  # Conservar credenciales incluso si falla un paso posterior.
+                api.request('POST', '/auth/register', {'empresa': account['empresa'], 'ruc': account['ruc'],
+                    'nombre': 'Admin Demo', 'email': account['admin_email'],
+                    'password': account['admin_password']}, expected=(201,))
+                session = api.request('POST', '/auth/login', {'email': account['admin_email'],
+                                     'password': account['admin_password']})
+                account.update(admin_token=session['token'], tenant_id=session['usuario']['tenant_id'],
+                               admin_user_id=session['usuario']['user_id'])
+                save_accounts()
         if accounts[0]['tenant_id'] == accounts[1]['tenant_id']:
             raise RuntimeError('El registro no generó tenants distintos')
         for account in accounts:

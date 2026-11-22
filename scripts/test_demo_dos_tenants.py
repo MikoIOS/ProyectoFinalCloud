@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
-from demo_dos_tenants import Curl, comprobar_tenant, guardar
+from demo_dos_tenants import Curl, comprobar_tenant, guardar, ciclo, cargar_continuacion, BASE
 
 
 class DemoTests(unittest.TestCase):
@@ -57,6 +57,24 @@ class DemoTests(unittest.TestCase):
             output = Path(tmp) / 'cuentas.json'
             guardar(output, {'password': 'test'})
             self.assertEqual(stat.S_IMODE(output.stat().st_mode), 0o600)
+
+    def test_continuacion_reutiliza_empleado_sin_recontratar(self):
+        api = Mock()
+        api.esperar.side_effect = RuntimeError('parada antes del login')
+        account = {'admin_token': 'test', 'tenant_id': 't1', 'alias': 'demo', 'empleado_id': 'emp-p123'}
+        with self.assertRaisesRegex(RuntimeError, 'parada'):
+            ciclo(api, account, Path('/tmp'), Mock())
+        api.request.assert_not_called()
+        self.assertEqual(api.esperar.call_args.args[0], 'empleado por SNS/SQS')
+
+    def test_continuacion_rechaza_escrituras_ya_avanzadas(self):
+        with tempfile.TemporaryDirectory() as tmp, patch('demo_dos_tenants.ROOT', Path(tmp)):
+            directory = Path(tmp) / 'hcm' / '.runtime' / 'demo-test'
+            directory.mkdir(parents=True)
+            accounts = [{'tenant_id': 't1', 'empleado_token': 'test'}, {'tenant_id': 't2'}]
+            guardar(directory / 'cuentas.json', {'base_url': BASE, 'cuentas': accounts})
+            with self.assertRaisesRegex(ValueError, 'avanzó'):
+                cargar_continuacion(directory)
 
     @patch('demo_dos_tenants.time.sleep')
     def test_evento_que_no_llega_no_se_aprueba(self, sleep):

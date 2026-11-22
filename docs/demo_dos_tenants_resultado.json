@@ -1,0 +1,590 @@
+{
+  "ejecucion": "demo-96da802b267c",
+  "estado": "APROBADO",
+  "base_url": "https://mwxvk1jpd3.execute-api.us-east-1.amazonaws.com/dev",
+  "alcance": "HTTP con curl; efectos EDA observados por endpoints. No inspecciona SNS/SQS/S3 directamente.",
+  "checks": [
+    {
+      "method": "GET",
+      "path": "/ping",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/empleados/emp-pcdaf74bc",
+      "status": 200,
+      "expected": [
+        200,
+        404
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "expected": [
+        200,
+        401
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/auth/cambiar-password",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/ausencias",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "ok": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/ausencias/aus-b6193a268bf54a13b63e545464a9db3c/estado",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/nominas/conceptos?periodo=2026-12&empleado_id=emp-pcdaf74bc",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/nominas/conceptos?periodo=2026-12&empleado_id=emp-pcdaf74bc",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/nominas/conceptos",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/nominas/conceptos",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/nominas/generar",
+      "status": 202,
+      "expected": [
+        202
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/nominas/planillas/2026-12",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/nominas/planillas/2026-12",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/nominas/nom-2026-12-emp-pcdaf74bc",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/nominas/nom-2026-12-emp-pcdaf74bc/boleta",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/evaluaciones",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/evaluaciones/eva-f7ccf412",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/notificaciones?limit=200",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/vacantes",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/postulaciones",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "ok": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/postulaciones/pos-82f2f1b3/estado",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/empleados/emp-p82f2f1b3",
+      "status": 200,
+      "expected": [
+        200,
+        404
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 401,
+      "expected": [
+        200,
+        401
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "expected": [
+        200,
+        401
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/auth/cambiar-password",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/ausencias",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "ok": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/ausencias/aus-384a634773b5472c8920e4c2378559ab/estado",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/nominas/conceptos?periodo=2026-12&empleado_id=emp-p82f2f1b3",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/nominas/conceptos?periodo=2026-12&empleado_id=emp-p82f2f1b3",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/nominas/conceptos",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/nominas/conceptos",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/nominas/generar",
+      "status": 202,
+      "expected": [
+        202
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/nominas/planillas/2026-12",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/nominas/planillas/2026-12",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/nominas/nom-2026-12-emp-p82f2f1b3",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/nominas/nom-2026-12-emp-p82f2f1b3/boleta",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/evaluaciones",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/evaluaciones/eva-4c10cb62",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/notificaciones?limit=200",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/empleados/emp-pcdaf74bc",
+      "status": 404,
+      "expected": [
+        403,
+        404
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/nominas/nom-2026-12-emp-pcdaf74bc",
+      "status": 404,
+      "expected": [
+        403,
+        404
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/usuarios/usr-b9fd6cebfd314d5b9c2da5b0d40fe858",
+      "status": 404,
+      "expected": [
+        403,
+        404
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ausencias/aus-b6193a268bf54a13b63e545464a9db3c?empleado=emp-pcdaf74bc",
+      "status": 404,
+      "expected": [
+        403,
+        404
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/evaluaciones?empleado=emp-pcdaf74bc",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/vacantes/vac-9429cdbb/postulaciones",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/notificaciones/not-198343efb3cc/leida",
+      "status": 404,
+      "expected": [
+        403,
+        404
+      ],
+      "ok": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/notificaciones/not-198343efb3cc/leida",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/empleados?tenant_id=empresa-3574fa2327ce4f4c860f33f437287af1",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/empleados/emp-p82f2f1b3",
+      "status": 404,
+      "expected": [
+        403,
+        404
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/nominas/nom-2026-12-emp-p82f2f1b3",
+      "status": 404,
+      "expected": [
+        403,
+        404
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/usuarios/usr-8357e8b40d7540b193c44ba59d86aade",
+      "status": 404,
+      "expected": [
+        403,
+        404
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ausencias/aus-384a634773b5472c8920e4c2378559ab?empleado=emp-p82f2f1b3",
+      "status": 404,
+      "expected": [
+        403,
+        404
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/evaluaciones?empleado=emp-p82f2f1b3",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/vacantes/vac-b88fedd9/postulaciones",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/notificaciones/not-a63b35ba9c33/leida",
+      "status": 404,
+      "expected": [
+        403,
+        404
+      ],
+      "ok": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/notificaciones/not-a63b35ba9c33/leida",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/empleados?tenant_id=empresa-a6fd70d56cd14b81996be2ee667f090f",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/notificaciones",
+      "status": 401,
+      "expected": [
+        401
+      ],
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/usuarios/me",
+      "status": 401,
+      "expected": [
+        401
+      ],
+      "ok": true
+    }
+  ]
+}
