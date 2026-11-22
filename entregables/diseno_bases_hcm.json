@@ -1,0 +1,707 @@
+{
+  "fecha_diseno": "2026-11-22",
+  "naturaleza": "Diseño documental; ejemplos ilustrativos, no exportación de datos reales",
+  "tablas": [
+    {
+      "microservicio": "ms-usuarios",
+      "tabla_prod": "hcm-usuarios",
+      "tabla_dev": "hcm-dev-usuarios",
+      "fuente": "ms-usuarios/serverless.yml",
+      "AttributeDefinitions": [
+        {
+          "AttributeName": "tenant_id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "user_id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "email",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "empleado_id",
+          "AttributeType": "S"
+        }
+      ],
+      "KeySchema": [
+        {
+          "AttributeName": "tenant_id",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "user_id",
+          "KeyType": "RANGE"
+        }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "login-email-index",
+          "KeySchema": [
+            {
+              "AttributeName": "email",
+              "KeyType": "HASH"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "KEYS_ONLY"
+          }
+        },
+        {
+          "IndexName": "email-index",
+          "KeySchema": [
+            {
+              "AttributeName": "tenant_id",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "email",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "ALL"
+          }
+        },
+        {
+          "IndexName": "empleado-index",
+          "KeySchema": [
+            {
+              "AttributeName": "tenant_id",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "empleado_id",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "KEYS_ONLY"
+          }
+        }
+      ],
+      "ejemplos": [
+        {
+          "tenant_id": "andina",
+          "user_id": "usr-000123",
+          "email": "maria.quispe@andina.pe",
+          "password_hash": "scrypt$16384$8$1$<salt_base64>$<hash_base64>",
+          "nombre": "María Quispe",
+          "rol": "admin_rrhh",
+          "activo": true,
+          "empleado_id": "emp-000045",
+          "created_at": "2026-10-01T10:00:00Z"
+        }
+      ]
+    },
+    {
+      "microservicio": "ms-empleados",
+      "tabla_prod": "hcm-empleados",
+      "tabla_dev": "hcm-dev-empleados",
+      "fuente": "ms-empleados/serverless.yml",
+      "AttributeDefinitions": [
+        {
+          "AttributeName": "tenant_id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "empleado_id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "area",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "jefe_id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "estado",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "documento",
+          "AttributeType": "S"
+        }
+      ],
+      "KeySchema": [
+        {
+          "AttributeName": "tenant_id",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "empleado_id",
+          "KeyType": "RANGE"
+        }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "area-index",
+          "KeySchema": [
+            {
+              "AttributeName": "tenant_id",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "area",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "INCLUDE",
+            "NonKeyAttributes": [
+              "nombres",
+              "apellidos",
+              "email",
+              "cargo",
+              "jefe_id",
+              "estado",
+              "fecha_ingreso"
+            ]
+          }
+        },
+        {
+          "IndexName": "jefe-index",
+          "KeySchema": [
+            {
+              "AttributeName": "tenant_id",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "jefe_id",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "INCLUDE",
+            "NonKeyAttributes": [
+              "nombres",
+              "apellidos",
+              "email",
+              "area",
+              "cargo",
+              "estado",
+              "fecha_ingreso"
+            ]
+          }
+        },
+        {
+          "IndexName": "estado-index",
+          "KeySchema": [
+            {
+              "AttributeName": "tenant_id",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "estado",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "INCLUDE",
+            "NonKeyAttributes": [
+              "nombres",
+              "apellidos",
+              "email",
+              "area",
+              "cargo",
+              "jefe_id",
+              "fecha_ingreso"
+            ]
+          }
+        },
+        {
+          "IndexName": "documento-index",
+          "KeySchema": [
+            {
+              "AttributeName": "tenant_id",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "documento",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "KEYS_ONLY"
+          }
+        }
+      ],
+      "ejemplos": [
+        {
+          "tenant_id": "andina",
+          "empleado_id": "emp-000045",
+          "nombres": "María",
+          "apellidos": "Quispe Huamán",
+          "documento": "71234567",
+          "email": "maria.quispe@andina.pe",
+          "area": "Recursos Humanos",
+          "cargo": "Analista de Nóminas",
+          "jefe_id": "emp-000010",
+          "fecha_ingreso": "2023-03-15",
+          "salario_base": 3500.0,
+          "estado": "ACTIVO"
+        }
+      ]
+    },
+    {
+      "microservicio": "ms-nominas",
+      "tabla_prod": "hcm-nominas-dev",
+      "tabla_dev": "hcm-dev-nominas",
+      "fuente": "ms-nominas/serverless.yml",
+      "AttributeDefinitions": [
+        {
+          "AttributeName": "tenant_id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "sk",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "empleado_periodo",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "periodo_empleado",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "periodo_concepto",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "periodo_planilla",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "banda_cargo",
+          "AttributeType": "S"
+        }
+      ],
+      "KeySchema": [
+        {
+          "AttributeName": "tenant_id",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "empleado-index",
+          "KeySchema": [
+            {
+              "AttributeName": "tenant_id",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "empleado_periodo",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "ALL"
+          }
+        },
+        {
+          "IndexName": "periodo-index",
+          "KeySchema": [
+            {
+              "AttributeName": "tenant_id",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "periodo_empleado",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "ALL"
+          }
+        },
+        {
+          "IndexName": "concepto-index",
+          "KeySchema": [
+            {
+              "AttributeName": "tenant_id",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "periodo_concepto",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "ALL"
+          }
+        },
+        {
+          "IndexName": "planilla-index",
+          "KeySchema": [
+            {
+              "AttributeName": "tenant_id",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "periodo_planilla",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "ALL"
+          }
+        },
+        {
+          "IndexName": "cargo-index",
+          "KeySchema": [
+            {
+              "AttributeName": "tenant_id",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "banda_cargo",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "ALL"
+          }
+        }
+      ],
+      "ejemplos": [
+        {
+          "tenant_id": "andina",
+          "nomina_id": "nom-2026-10-emp-000045",
+          "empleado_id": "emp-000045",
+          "periodo": "2026-10",
+          "sueldo_base": 3500.0,
+          "bonos": 300.0,
+          "descuentos": 455.0,
+          "neto": 3345.0,
+          "estado": "GENERADO",
+          "sk": "NOMINA#nom-2026-10-emp-000045",
+          "tipo": "NOMINA",
+          "empleado_periodo": "emp-000045#2026-10",
+          "periodo_empleado": "2026-10#emp-000045"
+        },
+        {
+          "tenant_id": "andina",
+          "sk": "BANDA#Analista",
+          "tipo": "BANDA",
+          "banda_cargo": "Analista",
+          "cargo": "Analista",
+          "minimo": 2500,
+          "maximo": 5000,
+          "moneda": "PEN"
+        },
+        {
+          "tenant_id": "andina",
+          "sk": "CONCEPTO#con-001",
+          "tipo": "CONCEPTO",
+          "concepto_id": "con-001",
+          "empleado_id": "emp-000045",
+          "periodo": "2026-10",
+          "periodo_concepto": "2026-10#con-001",
+          "tipo_concepto": "BONO",
+          "concepto": "Bono de productividad",
+          "monto": 300
+        },
+        {
+          "tenant_id": "andina",
+          "sk": "PLANILLA#2026-10",
+          "tipo": "PLANILLA",
+          "planilla_id": "pla-2026-10",
+          "periodo_planilla": "2026-10",
+          "periodo": "2026-10",
+          "estado": "GENERADA",
+          "total_empleados": 1,
+          "procesados": 1
+        },
+        {
+          "tenant_id": "andina",
+          "sk": "LIQUIDACION#emp-000045",
+          "tipo": "LIQUIDACION",
+          "empleado_id": "emp-000045",
+          "empleado_periodo": "emp-000045#LIQ",
+          "fecha_cese": "2026-10-31",
+          "total": 1500
+        }
+      ]
+    },
+    {
+      "microservicio": "ms-asistencia",
+      "tabla_prod": "hcm-asistencia-dev",
+      "tabla_dev": "hcm-dev-asistencia",
+      "fuente": "ms-asistencia/serverless.yml",
+      "AttributeDefinitions": [
+        {
+          "AttributeName": "tenant_id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "sk",
+          "AttributeType": "S"
+        }
+      ],
+      "KeySchema": [
+        {
+          "AttributeName": "tenant_id",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "GlobalSecondaryIndexes": [],
+      "ejemplos": [
+        {
+          "tenant_id": "andina",
+          "sk": "EMP#emp-000045#MAR#2026-10-20",
+          "empleado_id": "emp-000045",
+          "fecha": "2026-10-20",
+          "hora_entrada": "08:57",
+          "hora_salida": "18:03",
+          "clase": "MAR",
+          "estado": "CERRADA"
+        },
+        {
+          "tenant_id": "andina",
+          "sk": "EMP#emp-000045#AUS#aus-002345",
+          "empleado_id": "emp-000045",
+          "tipo": "VACACIONES",
+          "desde": "2026-12-20",
+          "hasta": "2026-12-27",
+          "dias": 6,
+          "estado": "PENDIENTE",
+          "aprobador_id": "emp-000010",
+          "clase": "AUS",
+          "ausencia_id": "aus-002345",
+          "con_goce": true
+        }
+      ]
+    },
+    {
+      "microservicio": "ms-reclutamiento",
+      "tabla_prod": "hcm-reclutamiento-dev",
+      "tabla_dev": "hcm-dev-reclutamiento",
+      "fuente": "ms-reclutamiento/serverless.yml",
+      "AttributeDefinitions": [
+        {
+          "AttributeName": "tenant_id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "sk",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "vacante_id",
+          "AttributeType": "S"
+        }
+      ],
+      "KeySchema": [
+        {
+          "AttributeName": "tenant_id",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "vacante-index",
+          "KeySchema": [
+            {
+              "AttributeName": "tenant_id",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "vacante_id",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "ALL"
+          }
+        }
+      ],
+      "ejemplos": [
+        {
+          "tenant_id": "andina",
+          "sk": "VACANTE#vac-000089",
+          "titulo": "Desarrollador Backend",
+          "area": "Tecnología",
+          "estado": "ABIERTA",
+          "fecha_publicacion": "2026-10-01"
+        },
+        {
+          "tenant_id": "andina",
+          "sk": "POSTULACION#pos-004567",
+          "vacante_id": "vac-000089",
+          "nombre": "Luis Ramos",
+          "email": "luis.ramos@mail.com",
+          "estado": "ENTREVISTA",
+          "cv_s3_key": "andina/cvs/pos-004567.pdf"
+        },
+        {
+          "tenant_id": "andina",
+          "sk": "ONBOARDING#emp-000045#onb-001200",
+          "empleado_id": "emp-000045",
+          "tarea": "Entregar laptop",
+          "completada": false,
+          "onboarding_id": "onb-001200"
+        }
+      ]
+    },
+    {
+      "microservicio": "ms-desempeno",
+      "tabla_prod": "hcm-desempeno-dev",
+      "tabla_dev": "hcm-dev-desempeno",
+      "fuente": "ms-desempeno/serverless.yml",
+      "AttributeDefinitions": [
+        {
+          "AttributeName": "tenant_id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "sk",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "empleado_id",
+          "AttributeType": "S"
+        }
+      ],
+      "KeySchema": [
+        {
+          "AttributeName": "tenant_id",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "empleado-index",
+          "KeySchema": [
+            {
+              "AttributeName": "tenant_id",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "empleado_id",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "ALL"
+          }
+        }
+      ],
+      "ejemplos": [
+        {
+          "tenant_id": "andina",
+          "evaluacion_id": "eva-000777",
+          "empleado_id": "emp-000045",
+          "evaluador_id": "emp-000010",
+          "periodo": "2026-S1",
+          "puntaje": 4.3,
+          "competencias": [
+            {
+              "nombre": "Trabajo en equipo",
+              "puntaje": 5
+            },
+            {
+              "nombre": "Puntualidad",
+              "puntaje": 4
+            }
+          ],
+          "objetivos": [
+            "Automatizar reporte mensual"
+          ],
+          "comentarios": "Excelente desempeño",
+          "estado": "COMPLETADA",
+          "sk": "eva-000777"
+        },
+        {
+          "tenant_id": "andina",
+          "sk": "rec-000001",
+          "reconocimiento_id": "rec-000001",
+          "empleado_id": "emp-000045",
+          "de_empleado_id": "emp-000010",
+          "mensaje": "Colaboración destacada",
+          "fecha": "2026-11-01T10:00:00Z"
+        }
+      ]
+    },
+    {
+      "microservicio": "ms-notificaciones",
+      "tabla_prod": "hcm-notificaciones-dev",
+      "tabla_dev": "hcm-dev-notificaciones",
+      "fuente": "ms-notificaciones/serverless.yml",
+      "AttributeDefinitions": [
+        {
+          "AttributeName": "tenant_id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "notificacion_id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "destinatario_id",
+          "AttributeType": "S"
+        }
+      ],
+      "KeySchema": [
+        {
+          "AttributeName": "tenant_id",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "notificacion_id",
+          "KeyType": "RANGE"
+        }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "destinatario-index",
+          "KeySchema": [
+            {
+              "AttributeName": "tenant_id",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "destinatario_id",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "ALL"
+          }
+        }
+      ],
+      "ejemplos": [
+        {
+          "tenant_id": "andina",
+          "notificacion_id": "not-009999",
+          "destinatario_id": "usr-000123",
+          "tipo": "NominaGenerada",
+          "mensaje": "Tu boleta de octubre ya está disponible",
+          "leida": false,
+          "created_at": "2026-10-31T08:00:00Z"
+        }
+      ]
+    }
+  ]
+}

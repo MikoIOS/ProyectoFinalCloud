@@ -17,7 +17,9 @@
 | **ms-asistencia** | `hcm-asistencia-dev` | **30,004** | 10,004 | 10,000 | 10,000 | ✅ CUMPLE |
 
 **Total Global de Registros en DynamoDB:** `221,319` registros.
-**Estado General del Requisito:** ✅ **APROBADO PARA ENTREGA**
+**Estado del documento:** evidencia histórica del 9-Nov; no acredita el conteo actual. Estas tablas originales corresponden hoy a producción. Las tablas nuevas `hcm-dev-*` no están incluidas.
+
+Actualizar con `python3 scripts/auditoria_bd.py --stage prod`; pruebas con `--stage dev`. Los reportes nuevos se guardan separados por entorno y no sobrescriben esta evidencia histórica.
 
 ---
 

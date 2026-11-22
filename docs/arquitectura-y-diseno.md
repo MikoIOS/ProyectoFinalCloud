@@ -100,15 +100,22 @@ Fuera de alcance (por tiempo): beneficios, encuestas de clima, IA/agentes, integ
 
 ## 4. Diseño de datos (estructura JSON)
 
-Convención: `tenant_id` = partition key en todas las tablas.
+Diseño contrastado con los `serverless.yml` y los escritores de cada módulo (22-Nov-2026). Los ejemplos son ilustrativos, no registros consultados hoy en AWS. DynamoDB usa cadenas (`S`) para todas las claves e índices de estas tablas; el resto de atributos depende de cada entidad.
 
-### 4.1 `hcm-usuarios`  (PK `tenant_id` · SK `user_id`)
+Cada tabla tiene PK `tenant_id`. Los GSI son dispersos: un ítem solo participa cuando contiene sus atributos de clave. `login-email-index` permite localizar la cuenta durante el login; las consultas autenticadas deben conservar el filtro de tenant.
+
+Los nombres de producción son históricos. Pruebas usa `hcm-dev-<modulo>`; consultar el [mapa de entornos](../hcm/README.md#datos-separados-por-entorno-desplegado).
+
+### 4.1 `ms-usuarios` (PK `tenant_id` · SK `user_id`)
+
+Fuente: [`ms-usuarios/serverless.yml`](../ms-usuarios/serverless.yml).
+
 ```json
 {
   "tenant_id": "andina",
   "user_id": "usr-000123",
   "email": "maria.quispe@andina.pe",
-  "password_hash": "$2b$12$...",
+  "password_hash": "scrypt$16384$8$1$<salt_base64>$<hash_base64>",
   "nombre": "María Quispe",
   "rol": "admin_rrhh",
   "activo": true,
@@ -116,9 +123,17 @@ Convención: `tenant_id` = partition key en todas las tablas.
   "created_at": "2026-10-01T10:00:00Z"
 }
 ```
-GSI `email-index` (PK `tenant_id`, SK `email`).
 
-### 4.2 `hcm-empleados`  (PK `tenant_id` · SK `empleado_id`)
+| Índice | PK (S) | SK (S) |
+|---|---|---|
+| `login-email-index` | `email` | — |
+| `email-index` | `tenant_id` | `email` |
+| `empleado-index` | `tenant_id` | `empleado_id` |
+
+### 4.2 `ms-empleados` (PK `tenant_id` · SK `empleado_id`)
+
+Fuente: [`ms-empleados/serverless.yml`](../ms-empleados/serverless.yml).
+
 ```json
 {
   "tenant_id": "andina",
@@ -131,58 +146,149 @@ GSI `email-index` (PK `tenant_id`, SK `email`).
   "cargo": "Analista de Nóminas",
   "jefe_id": "emp-000010",
   "fecha_ingreso": "2023-03-15",
-  "salario_base": 3500.00,
+  "salario_base": 3500.0,
   "estado": "ACTIVO"
 }
 ```
-GSI `area-index` (PK `tenant_id`, SK `area`).
 
-### 4.3 `hcm-nominas`  (PK `tenant_id` · SK `periodo#empleado_id`)
+| Índice | PK (S) | SK (S) |
+|---|---|---|
+| `area-index` | `tenant_id` | `area` |
+| `jefe-index` | `tenant_id` | `jefe_id` |
+| `estado-index` | `tenant_id` | `estado` |
+| `documento-index` | `tenant_id` | `documento` |
+
+### 4.3 `ms-nominas` (PK `tenant_id` · SK `sk`)
+
+Fuente: [`ms-nominas/serverless.yml`](../ms-nominas/serverless.yml).
+
 ```json
 {
   "tenant_id": "andina",
-  "nomina_id": "2026-10#emp-000045",
+  "nomina_id": "nom-2026-10-emp-000045",
   "empleado_id": "emp-000045",
   "periodo": "2026-10",
-  "sueldo_base": 3500.00,
-  "bonos": 300.00,
-  "descuentos": 455.00,
-  "neto": 3345.00,
-  "estado": "PAGADO",
-  "boleta_s3_key": "andina/boletas/2026-10/emp-000045.pdf"
+  "sueldo_base": 3500.0,
+  "bonos": 300.0,
+  "descuentos": 455.0,
+  "neto": 3345.0,
+  "estado": "GENERADO",
+  "sk": "NOMINA#nom-2026-10-emp-000045",
+  "tipo": "NOMINA",
+  "empleado_periodo": "emp-000045#2026-10",
+  "periodo_empleado": "2026-10#emp-000045"
 }
 ```
-GSI `empleado-index` (PK `tenant_id`, SK `empleado_id`).
-Las bandas salariales van en la misma tabla con `nomina_id = "BANDA#<cargo>"` (campos `min`, `max`).
 
-### 4.4 `hcm-asistencia`  (PK `tenant_id` · SK `tipo#id`)
+| Índice | PK (S) | SK (S) |
+|---|---|---|
+| `empleado-index` | `tenant_id` | `empleado_periodo` |
+| `periodo-index` | `tenant_id` | `periodo_empleado` |
+| `concepto-index` | `tenant_id` | `periodo_concepto` |
+| `planilla-index` | `tenant_id` | `periodo_planilla` |
+| `cargo-index` | `tenant_id` | `banda_cargo` |
+
+Otras entidades de la misma tabla (ejemplos abreviados):
+
 ```json
 {
   "tenant_id": "andina",
-  "sk": "MARCACION#2026-10-20#emp-000045",
+  "sk": "BANDA#Analista",
+  "tipo": "BANDA",
+  "banda_cargo": "Analista",
+  "cargo": "Analista",
+  "minimo": 2500,
+  "maximo": 5000,
+  "moneda": "PEN"
+}
+```
+
+```json
+{
+  "tenant_id": "andina",
+  "sk": "CONCEPTO#con-001",
+  "tipo": "CONCEPTO",
+  "concepto_id": "con-001",
+  "empleado_id": "emp-000045",
+  "periodo": "2026-10",
+  "periodo_concepto": "2026-10#con-001",
+  "tipo_concepto": "BONO",
+  "concepto": "Bono de productividad",
+  "monto": 300
+}
+```
+
+```json
+{
+  "tenant_id": "andina",
+  "sk": "PLANILLA#2026-10",
+  "tipo": "PLANILLA",
+  "planilla_id": "pla-2026-10",
+  "periodo_planilla": "2026-10",
+  "periodo": "2026-10",
+  "estado": "GENERADA",
+  "total_empleados": 1,
+  "procesados": 1
+}
+```
+
+```json
+{
+  "tenant_id": "andina",
+  "sk": "LIQUIDACION#emp-000045",
+  "tipo": "LIQUIDACION",
+  "empleado_id": "emp-000045",
+  "empleado_periodo": "emp-000045#LIQ",
+  "fecha_cese": "2026-10-31",
+  "total": 1500
+}
+```
+
+
+### 4.4 `ms-asistencia` (PK `tenant_id` · SK `sk`)
+
+Fuente: [`ms-asistencia/serverless.yml`](../ms-asistencia/serverless.yml).
+
+```json
+{
+  "tenant_id": "andina",
+  "sk": "EMP#emp-000045#MAR#2026-10-20",
   "empleado_id": "emp-000045",
   "fecha": "2026-10-20",
   "hora_entrada": "08:57",
   "hora_salida": "18:03",
-  "horas": 9.1
+  "clase": "MAR",
+  "estado": "CERRADA"
 }
 ```
+
 ```json
 {
   "tenant_id": "andina",
-  "sk": "AUSENCIA#aus-002345",
+  "sk": "EMP#emp-000045#AUS#aus-002345",
   "empleado_id": "emp-000045",
   "tipo": "VACACIONES",
   "desde": "2026-12-20",
   "hasta": "2026-12-27",
   "dias": 6,
   "estado": "PENDIENTE",
-  "aprobador_id": "emp-000010"
+  "aprobador_id": "emp-000010",
+  "clase": "AUS",
+  "ausencia_id": "aus-002345",
+  "con_goce": true
 }
 ```
-GSI `empleado-index` (PK `tenant_id`, SK `empleado_id`).
 
-### 4.5 `hcm-reclutamiento`  (PK `tenant_id` · SK `tipo#id`)
+| Índice | PK (S) | SK (S) |
+|---|---|---|
+| Sin GSI | — | — |
+
+Consulta por prefijo de SK: `EMP#<empleado_id>#MAR#<fecha>` y `EMP#<empleado_id>#AUS#<ausencia_id>`. El ítem `EMP#<empleado_id>#CONTROL` mantiene el control de concurrencia de ausencias. No existe `empleado-index` en esta tabla.
+
+### 4.5 `ms-reclutamiento` (PK `tenant_id` · SK `sk`)
+
+Fuente: [`ms-reclutamiento/serverless.yml`](../ms-reclutamiento/serverless.yml).
+
 ```json
 {
   "tenant_id": "andina",
@@ -193,6 +299,7 @@ GSI `empleado-index` (PK `tenant_id`, SK `empleado_id`).
   "fecha_publicacion": "2026-10-01"
 }
 ```
+
 ```json
 {
   "tenant_id": "andina",
@@ -204,18 +311,26 @@ GSI `empleado-index` (PK `tenant_id`, SK `empleado_id`).
   "cv_s3_key": "andina/cvs/pos-004567.pdf"
 }
 ```
+
 ```json
 {
   "tenant_id": "andina",
-  "sk": "ONBOARDING#onb-001200",
+  "sk": "ONBOARDING#emp-000045#onb-001200",
   "empleado_id": "emp-000045",
   "tarea": "Entregar laptop",
-  "completada": false
+  "completada": false,
+  "onboarding_id": "onb-001200"
 }
 ```
-GSI `vacante-index` (PK `tenant_id`, SK `vacante_id`).
 
-### 4.6 `hcm-desempeno`  (PK `tenant_id` · SK `evaluacion_id`)
+| Índice | PK (S) | SK (S) |
+|---|---|---|
+| `vacante-index` | `tenant_id` | `vacante_id` |
+
+### 4.6 `ms-desempeno` (PK `tenant_id` · SK `sk`)
+
+Fuente: [`ms-desempeno/serverless.yml`](../ms-desempeno/serverless.yml).
+
 ```json
 {
   "tenant_id": "andina",
@@ -225,31 +340,51 @@ GSI `vacante-index` (PK `tenant_id`, SK `vacante_id`).
   "periodo": "2026-S1",
   "puntaje": 4.3,
   "competencias": [
-    { "nombre": "Trabajo en equipo", "puntaje": 5 },
-    { "nombre": "Puntualidad", "puntaje": 4 }
+    {
+      "nombre": "Trabajo en equipo",
+      "puntaje": 5
+    },
+    {
+      "nombre": "Puntualidad",
+      "puntaje": 4
+    }
   ],
-  "objetivos": ["Automatizar reporte mensual"],
+  "objetivos": [
+    "Automatizar reporte mensual"
+  ],
   "comentarios": "Excelente desempeño",
-  "estado": "COMPLETADA"
+  "estado": "COMPLETADA",
+  "sk": "eva-000777"
 }
 ```
-GSI `empleado-index` (PK `tenant_id`, SK `empleado_id`).
 
-### 4.7 `hcm-notificaciones`  (PK `tenant_id` · SK `notificacion_id`)
+| Índice | PK (S) | SK (S) |
+|---|---|---|
+| `empleado-index` | `tenant_id` | `empleado_id` |
+
+Evaluaciones: `sk = evaluacion_id` (`eva-…`). Reconocimientos: `sk = reconocimiento_id` (`rec-…`), con `empleado_id`, `de_empleado_id`, `mensaje` y `fecha`.
+
+### 4.7 `ms-notificaciones` (PK `tenant_id` · SK `notificacion_id`)
+
+Fuente: [`ms-notificaciones/serverless.yml`](../ms-notificaciones/serverless.yml).
+
 ```json
 {
   "tenant_id": "andina",
   "notificacion_id": "not-009999",
   "destinatario_id": "usr-000123",
-  "tipo": "BOLETA_DISPONIBLE",
+  "tipo": "NominaGenerada",
   "mensaje": "Tu boleta de octubre ya está disponible",
   "leida": false,
   "created_at": "2026-10-31T08:00:00Z"
 }
 ```
-GSI `destinatario-index` (PK `tenant_id`, SK `destinatario_id`).
 
-> Volumen: ≥ 30,000 registros por tabla → ~10,000 por tenant. Mantener IDs coherentes entre tablas (mismos `empleado_id`) para que la demo se vea real.
+| Índice | PK (S) | SK (S) |
+|---|---|---|
+| `destinatario-index` | `tenant_id` | `destinatario_id` |
+
+Volumen exigido: ≥30.000 ítems por microservicio repartidos en tres tenants; no son 30.000 por tenant. El conteo incluye entidades y registros de control. Ver [métricas de producción y fecha de verificación](metricas_bd_prod.md); el conteo no demuestra aislamiento HTTP.
 
 ---
 

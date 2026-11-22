@@ -9,6 +9,10 @@ El frontend principal se mantiene en `Armandorc7/frontend_mimo`, con su propio h
 
 ---
 
+## Informe final y diseño de bases
+
+[Informe PDF](entregables/Informe_Final_Mimo_HCM_Grupo2.pdf) · [Word editable](entregables/Informe_Final_Mimo_HCM_Grupo2.docx) · [Diseño JSON de las siete bases](entregables/diseno_bases_hcm.json). Preparados el 22-Nov-2026 con arquitectura, estructuras NoSQL, volumen por tenant, capturas, eventos y fuentes fechadas. La sección de diseño está dentro del informe; los ejemplos JSON son sintéticos.
+
 ## Servicio unificado HCM
 
 [Servicio Serverless `hcm`](hcm/README.md): desplegado en dev y prod con **17 Lambdas por entorno**, 58 rutas y una REST API por stage. Dev se verificó antes de actualizar prod. Las siete tablas y los recursos de pruebas están separados; producción conserva las bases originales. Cada entorno tiene seis consumidores habilitados y 25 alarmas con acciones activas. El frontend publicado conserva la API de prod. [Verificación AWS](docs/hcm_unificado_verificacion.json) · [Pruebas y límites](docs/lambdas_agrupadas.md) · [EDA real aprobado](docs/eda_dev_real.md) · [Respaldos S3](backup/README.md).
@@ -179,7 +183,7 @@ Servicios backend desplegados y con datos de prueba:
 | **ms-asistencia** | **`hcm-asistencia-dev`** | **30,004** | `https://p79musr10g.execute-api.us-east-1.amazonaws.com/dev` |
 
 - El detalle de `ms-nominas` (endpoints, eventos, seed y pruebas) está en `ms-nominas/README.md`.
-- La auditoría de volumen se genera con `python3 scripts/auditoria_bd.py --output docs/metricas_bd.md`; el reporte actual está en `docs/metricas_bd.md`.
+- La auditoría de volumen se genera con `python3 scripts/auditoria_bd.py --stage prod` (o `--stage dev`); genera `docs/metricas_bd_prod.md` o `docs/metricas_bd_dev.md`. `docs/metricas_bd.md` conserva el conteo histórico del 9-Nov.
 - La colección Postman de nóminas está en `postman/ms-nominas-dev.postman_collection.json`.
 - Prueba EDA de evaluación → notificación aprobada en dev: evidencia y pasos para repetir en [docs/prueba_eda.md](docs/prueba_eda.md).
 - `ms-asistencia` desplegado: [API y reglas](ms-asistencia/README.md), [evidencia de 34 comprobaciones curl](docs/prueba_asistencia.md) y [colección Postman](postman/ms-asistencia-dev.postman_collection.json). Flujo SIN_GOCE → notificación y concepto de nómina verificado.
